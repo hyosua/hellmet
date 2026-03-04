@@ -235,11 +235,11 @@ export function SingleBox() {
             he<span className="text-white">llm</span>et
           </h1>
           <p className="mt-1 text-sm text-muted">
-            Décris ce que tu veux coder → reçois un prompt prêt à l'emploi avec les contraintes de sécurité OWASP injectées automatiquement.
+            Prompt sécurisé en un clic — contraintes OWASP injectées automatiquement.
           </p>
         </div>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3 rounded-md border border-muted bg-surface p-4">
           <textarea
             value={state.intention}
             onChange={(e) =>
@@ -247,8 +247,8 @@ export function SingleBox() {
             }
             onKeyDown={handleKeyDown}
             placeholder="Ex : route API Node.js pour uploader des images avec JWT"
-            rows={4}
-            className="w-full rounded-md bg-surface text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent placeholder:text-muted"
+            rows={3}
+            className="w-full rounded-md bg-bg text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent placeholder:text-muted"
             aria-label="Intention de code"
           />
 
@@ -257,7 +257,6 @@ export function SingleBox() {
               {state.error}
             </p>
           )}
-        </div>
 
         <div className="flex items-center gap-2">
 
@@ -327,6 +326,7 @@ export function SingleBox() {
             → Run
           </button>
         </div>
+        </div>
 
         {/* History panel */}
         {historyOpen && history.length > 0 && (
@@ -350,9 +350,15 @@ export function SingleBox() {
           </div>
         )}
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3 rounded-md border border-muted bg-surface p-4">
           <p className="text-xs text-muted">
-            <span className="text-text">Règles OWASP</span> — détectées automatiquement selon ton code, ou force-les manuellement.
+            <span
+              className="text-text cursor-help"
+              title="OWASP Top 10 — liste des vulnérabilités web les plus critiques. Chaque règle correspond à une catégorie de risque (injection, auth, accès…)."
+            >
+              Règles OWASP
+            </span>{" "}
+            — détectées selon ton code, activables manuellement.
           </p>
           <Toggles
             activeToggles={manualToggles}
@@ -361,13 +367,15 @@ export function SingleBox() {
           />
         </div>
 
-        <OutputPanel
-          output={state.output}
-          isLoading={state.isLoading}
-          detection={state.detection}
-          activeRules={activeRules}
-          intention={state.intention}
-        />
+        <div className="rounded-md border border-muted bg-surface p-4">
+          <OutputPanel
+            output={state.output}
+            isLoading={state.isLoading}
+            detection={state.detection}
+            activeRules={activeRules}
+            intention={state.intention}
+          />
+        </div>
       </div>
     </main>
   );
