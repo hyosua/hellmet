@@ -243,7 +243,7 @@ export function SingleBox() {
               dispatch({ type: "SET_INTENTION", payload: e.target.value })
             }
             onKeyDown={handleKeyDown}
-            placeholder="Décris ce que tu veux coder…"
+            placeholder="Ex : route API Node.js pour uploader des images avec JWT"
             rows={4}
             className="w-full rounded-md bg-surface text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent placeholder:text-muted"
             aria-label="Intention de code"
