@@ -230,9 +230,14 @@ export function SingleBox() {
   return (
     <main className="min-h-screen flex flex-col items-center px-4 py-12">
       <div className="w-full max-w-2xl flex flex-col gap-6">
-        <h1 className="text-2xl font-bold tracking-tight text-accent">
-          he<span className="text-white">llm</span>et
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-accent">
+            he<span className="text-white">llm</span>et
+          </h1>
+          <p className="mt-1 text-sm text-muted">
+            Décris ce que tu veux coder → reçois un prompt prêt à l'emploi avec les contraintes de sécurité OWASP injectées automatiquement.
+          </p>
+        </div>
 
         <div className="flex flex-col gap-2">
           <textarea
@@ -345,11 +350,16 @@ export function SingleBox() {
           </div>
         )}
 
-        <Toggles
-          activeToggles={manualToggles}
-          autoDetected={autoDetected}
-          onChange={handleToggle}
-        />
+        <div className="flex flex-col gap-2">
+          <p className="text-xs text-muted">
+            <span className="text-text">Règles OWASP</span> — détectées automatiquement selon ton code, ou force-les manuellement.
+          </p>
+          <Toggles
+            activeToggles={manualToggles}
+            autoDetected={autoDetected}
+            onChange={handleToggle}
+          />
+        </div>
 
         <OutputPanel
           output={state.output}
