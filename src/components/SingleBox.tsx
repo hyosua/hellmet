@@ -196,7 +196,7 @@ export function SingleBox() {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         handleSubmit();
       }
@@ -304,26 +304,26 @@ export function SingleBox() {
             </button>
           )}
 
-          {/* Clear — right-aligned, red */}
-          {(state.intention || state.output) && (
-            <button
-              onClick={() => dispatch({ type: "CLEAR" })}
-              className="ml-auto px-4 py-2.5 rounded-md border border-red-500/60 text-red-400 font-mono text-sm hover:bg-red-500/10 hover:border-red-400 transition-colors"
-              aria-label="Effacer tout"
-            >
-              ✕ Clear
-            </button>
-          )}
-        {/* Run */}
+          {/* Clear — always visible, disabled if nothing to clear */}
+          <button
+            onClick={() => dispatch({ type: "CLEAR" })}
+            disabled={!state.intention && !state.output}
+            className="px-4 py-2.5 rounded-md border border-red-500/60 text-red-400 font-mono text-sm hover:bg-red-500/10 hover:border-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-red-500/60"
+            aria-label="Effacer tout"
+          >
+            ✕ Clear
+          </button>
+
+          {/* Run — pushed to the right */}
           <button
             onClick={handleSubmit}
             disabled={state.isLoading}
-            className="flex items-center gap-2.5 px-5 py-2.5 rounded-md bg-accent text-bg font-mono font-semibold text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-            aria-label="Générer le prompt sécurisé (Ctrl+Entrée)"
+            className="ml-auto flex items-center gap-2.5 px-5 py-2.5 rounded-md bg-accent text-bg font-mono font-semibold text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            aria-label="Générer le prompt sécurisé (Entrée)"
           >
             → Run
             <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-bg/30 bg-bg/20 px-1.5 py-0.5 text-[10px] font-sans opacity-80">
-              Ctrl+↵
+              ↵
             </kbd>
           </button>
         </div>
