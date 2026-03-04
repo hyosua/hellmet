@@ -17,6 +17,7 @@ describe("Toggles", () => {
         activeToggles={new Set()}
         autoDetected={new Set()}
         onChange={onChange}
+        lang="en"
       />
     );
 
@@ -28,7 +29,7 @@ describe("Toggles", () => {
     const onChange = jest.fn();
     const active = new Set<OWASPRuleId>(["A03"]);
     render(
-      <Toggles activeToggles={active} autoDetected={new Set()} onChange={onChange} />
+      <Toggles activeToggles={active} autoDetected={new Set()} onChange={onChange} lang="en" />
     );
 
     fireEvent.click(screen.getByRole("button", { name: /A03 Injection/i }));
@@ -38,7 +39,7 @@ describe("Toggles", () => {
   it("renders a rule in autoDetected with data-state='auto'", () => {
     const autoDetected = new Set<OWASPRuleId>(["A01"]);
     render(
-      <Toggles activeToggles={new Set()} autoDetected={autoDetected} onChange={noop} />
+      <Toggles activeToggles={new Set()} autoDetected={autoDetected} onChange={noop} lang="en" />
     );
 
     const btn = screen.getByRole("button", { name: /A01 Access Control/i });
@@ -49,7 +50,7 @@ describe("Toggles", () => {
   it("renders a manually activated rule with data-state='manual'", () => {
     const active = new Set<OWASPRuleId>(["A07"]);
     render(
-      <Toggles activeToggles={active} autoDetected={new Set()} onChange={noop} />
+      <Toggles activeToggles={active} autoDetected={new Set()} onChange={noop} lang="en" />
     );
 
     const btn = screen.getByRole("button", { name: /A07 Auth/i });
@@ -59,7 +60,7 @@ describe("Toggles", () => {
 
   it("renders an untouched rule with data-state='inactive'", () => {
     render(
-      <Toggles activeToggles={new Set()} autoDetected={new Set()} onChange={noop} />
+      <Toggles activeToggles={new Set()} autoDetected={new Set()} onChange={noop} lang="en" />
     );
 
     const btn = screen.getByRole("button", { name: /A02 Crypto/i });
@@ -71,7 +72,7 @@ describe("Toggles", () => {
     const onChange = jest.fn();
     const autoDetected = new Set<OWASPRuleId>(["A04"]);
     render(
-      <Toggles activeToggles={new Set()} autoDetected={autoDetected} onChange={onChange} />
+      <Toggles activeToggles={new Set()} autoDetected={autoDetected} onChange={onChange} lang="en" />
     );
 
     fireEvent.click(screen.getByRole("button", { name: /A04 Insecure Design/i }));
@@ -79,17 +80,25 @@ describe("Toggles", () => {
   });
 
   it("union of autoDetected and activeToggles has no duplicates", () => {
-    // Both A01 is auto-detected AND in active toggles — should still appear as 'auto'
     const autoDetected = new Set<OWASPRuleId>(["A01"]);
     const activeToggles = new Set<OWASPRuleId>(["A01", "A02"]);
     render(
-      <Toggles activeToggles={activeToggles} autoDetected={autoDetected} onChange={noop} />
+      <Toggles activeToggles={activeToggles} autoDetected={autoDetected} onChange={noop} lang="en" />
     );
 
     const a01 = screen.getByRole("button", { name: /A01 Access Control/i });
-    expect(a01).toHaveAttribute("data-state", "auto"); // auto takes precedence
+    expect(a01).toHaveAttribute("data-state", "auto");
 
     const a02 = screen.getByRole("button", { name: /A02 Crypto/i });
     expect(a02).toHaveAttribute("data-state", "manual");
+  });
+
+  it("renders French labels when lang=fr", () => {
+    render(
+      <Toggles activeToggles={new Set()} autoDetected={new Set()} onChange={noop} lang="fr" />
+    );
+
+    expect(screen.getByRole("button", { name: /A01 Contrôle d'accès/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /A07 Authentification/i })).toBeInTheDocument();
   });
 });

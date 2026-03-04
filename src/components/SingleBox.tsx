@@ -384,6 +384,7 @@ export function SingleBox() {
             activeToggles={manualToggles}
             autoDetected={autoDetected}
             onChange={handleToggle}
+            lang={state.lang}
           />
         </div>
 
