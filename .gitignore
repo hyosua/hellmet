@@ -38,12 +38,10 @@ Thumbs.db
 # Test coverage
 coverage/
 
-# Specs
-#specs
-
-# Claude
-#CLAUDE.md
-#.claude
-#.specify
+# Specs & AI Agents
+specs/
+.claude/
+.specify/
+CLAUDE.md
+GEMINI.md
 .clauderules
-# 
