@@ -186,6 +186,7 @@ export function SingleBox() {
           isLoading={state.isLoading}
           detection={state.detection}
           activeRules={activeRules}
+          intention={state.intention}
         />
       </div>
     </main>

@@ -95,8 +95,8 @@ description: "Task list for Hellmet — Secure Prompt Box"
 
 **Goal**: Optional Groq-powered prompt enrichment that enhances the locally-generated prompt. Graceful fallback if unavailable.
 
-- [ ] T026 [P] Implement `src/app/api/enhance/route.ts` — `export const runtime = "nodejs"`; `POST` handler accepts `{ intention: string, rules: string[], basePrompt: string }`; instantiate `new Groq({ apiKey: process.env.GROQ_API_KEY })` at module scope; call `groq.chat.completions.create({ model: "llama-3.3-70b-versatile", messages: [...], max_tokens: 512 })`; return `{ text: string }` on success, `{ error: string }` with status 400/500 on failure
-- [ ] T027 [US1] Add "Enhance with AI" button to `src/components/OutputPanel.tsx` — visible only when `output` is set; on click: POST to `/api/enhance`, show loading state on button, update `output.claude` and `output.gpt` with enriched text; on fetch error: keep existing local output, show brief toast "Enrichissement indisponible"
+- [x] T026 [P] Implement `src/app/api/enhance/route.ts` — `export const runtime = "nodejs"`; `POST` handler accepts `{ intention: string, rules: string[], basePrompt: string }`; instantiate `new Groq({ apiKey: process.env.GROQ_API_KEY })` at module scope; call `groq.chat.completions.create({ model: "llama-3.3-70b-versatile", messages: [...], max_tokens: 512 })`; return `{ text: string }` on success, `{ error: string }` with status 400/500 on failure
+- [x] T027 [US1] Add "Enhance with AI" button to `src/components/OutputPanel.tsx` — visible only when `output` is set; on click: POST to `/api/enhance`, show loading state on button, update `output.claude` and `output.gpt` with enriched text; on fetch error: keep existing local output, show brief toast "Enrichissement indisponible"
 
 **Checkpoint**: LLM enrichment works when `GROQ_API_KEY` is set. Core feature unaffected when key is absent or endpoint fails.
 
@@ -114,6 +114,37 @@ description: "Task list for Hellmet — Secure Prompt Box"
 
 ---
 
+## Phase 8: Improvements — Detection, Rules, UI & Architecture
+
+**Purpose**: Incremental quality improvements identified after MVP delivery. Each group is independent and can be prioritized separately.
+
+### 8A — Multi-domain Detection (highest impact / lowest effort)
+
+- [ ] T033 Migrate `Detection.domain` from `DomainKey | null` to `DomainKey[]` in `src/core/types.ts` — update `AppState`, `OutputPanel` props, and all call sites
+- [ ] T034 Update `detect()` in `src/core/detector.ts` — return all domains with score ≥ 1 instead of only the best; update return type to `Detection` with `domains: DomainKey[]`
+- [ ] T035 Update `src/components/SingleBox.tsx` — pass `detection.domains` (array) to `getRulesForDomains()` directly; update detection metadata display to show all detected domains
+- [ ] T036 Update unit tests `tests/unit/detector.test.ts` — add multi-domain detection cases (e.g., `"formulaire de login"` → `["auth", "frontend"]`); verify union of rules contains no duplicates
+
+### 8B — OWASP Rule Coverage
+
+- [ ] T037 [P] Add missing OWASP 2025 entries to `src/data/rules.json` — A06 (Vulnerable Components), A08 (Software & Data Integrity Failures), A10 (SSRF); add `severity: "critical"|"high"|"medium"` field to all 10 entries
+- [ ] T038 [P] Add A06, A08, A10 to `DOMAIN_MAP` in `src/core/owasp-map.ts` where relevant (e.g., A06 → api, A08 → upload/api, A10 → api); add missing toggle buttons to `Toggles.tsx` if new rules are manually activatable
+- [ ] T039 [P] Update `buildPrompt()` in `src/core/prompt-builder.ts` — sort injected rules by `severity` (critical first) before formatting constraint lines
+
+### 8C — UI Improvements
+
+- [ ] T040 [P] Add Claude ↔ GPT format switcher to `src/components/OutputPanel.tsx` — replace single textarea with tab/toggle switcher (`Claude XML` | `GPT Markdown`); textarea shows `output.claude` or `output.gpt` based on active tab; copy button copies the currently displayed format
+- [ ] T041 [P] Add constraint tooltip to `src/components/Toggles.tsx` — on hover/focus, show a `<span role="tooltip">` with the rule's constraint text (fetch from `getRules()`); use CSS `title` attribute as fallback
+- [ ] T042 [P] Add session history to `src/components/SingleBox.tsx` — persist last 5 intentions + outputs in `localStorage` under key `hellmet_history`; add a collapsible history panel below the output; clicking an entry restores intention and output without re-running detection
+- [ ] T043 [P] Add security coverage score to `src/components/OutputPanel.tsx` — display `{activeRules.size} / 7 règles actives` as a visual badge next to the detection metadata
+
+### 8D — Prompt Quality
+
+- [ ] T044 [P] Add output language selector to `src/components/SingleBox.tsx` — `FR` / `EN` toggle stored in state; pass `lang` param to `buildPrompt()`; translate instruction and constraint sections accordingly in `prompt-builder.ts`
+- [ ] T045 [P] Add keyword weighting to `src/core/detector.ts` — define a `KEYWORD_WEIGHTS` map for high-signal terms (e.g., `jwt` → 3, `bcrypt` → 3, `sql injection` → 3); multiply score by weight during domain detection
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -125,6 +156,9 @@ description: "Task list for Hellmet — Secure Prompt Box"
 - **User Story 3 (Phase 5)**: Depends on Phase 3 completion (extends OutputPanel); can run in parallel with Phase 4
 - **LLM Enrichment (Phase 6)**: Depends on Phase 3 (extends OutputPanel and adds API route); can run in parallel with Phase 4/5
 - **Polish (Phase 7)**: Depends on Phases 3, 4, 5 completion
+- **Improvements (Phase 8)**: Depends on Phase 7 completion; sub-groups 8A–8D are independent of each other
+  - 8A (multi-domain) is a **prerequisite** for 8B and 8D if those touch detection output
+  - 8B, 8C, 8D are otherwise fully parallel
 
 ### User Story Dependencies
 
@@ -168,6 +202,8 @@ description: "Task list for Hellmet — Secure Prompt Box"
 4. Phase 5 → Add copy buttons (complete core feature)
 5. Phase 6 → Add Groq enrichment (optional enhancement)
 6. Phase 7 → Polish + deploy to production
+7. Phase 8A → Multi-domain detection (breaking change, do first)
+8. Phase 8B + 8C + 8D → Rules, UI and prompt quality (parallel)
 
 ---
 

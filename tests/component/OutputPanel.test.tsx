@@ -23,6 +23,7 @@ const defaultProps = {
   isLoading: false,
   detection: mockDetection,
   activeRules: new Set<"A01" | "A02" | "A03" | "A04" | "A05" | "A07" | "A09">(["A01"]),
+  intention: "Crée une route api en Node",
 };
 
 beforeEach(() => {

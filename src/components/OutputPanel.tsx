@@ -8,6 +8,7 @@ interface OutputPanelProps {
   isLoading: boolean;
   detection: Detection | null;
   activeRules: Set<OWASPRuleId>;
+  intention: string;
 }
 
 export function OutputPanel({
@@ -15,9 +16,19 @@ export function OutputPanel({
   isLoading,
   detection,
   activeRules,
+  intention,
 }: OutputPanelProps) {
   const [clipboardAvailable, setClipboardAvailable] = useState(false);
   const [copiedTarget, setCopiedTarget] = useState<"claude" | "gpt" | null>(null);
+  const [enhancedOutput, setEnhancedOutput] = useState<PromptOutput | null>(null);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhanceError, setEnhanceError] = useState(false);
+
+  // Reset enhancement when a new output is generated
+  useEffect(() => {
+    setEnhancedOutput(null);
+    setEnhanceError(false);
+  }, [output]);
 
   useEffect(() => {
     setClipboardAvailable(
@@ -25,11 +36,40 @@ export function OutputPanel({
     );
   }, []);
 
+  const displayOutput = enhancedOutput ?? output;
+
   const handleCopy = async (target: "claude" | "gpt") => {
-    if (!output) return;
-    await navigator.clipboard.writeText(target === "claude" ? output.claude : output.gpt);
+    if (!displayOutput) return;
+    await navigator.clipboard.writeText(
+      target === "claude" ? displayOutput.claude : displayOutput.gpt
+    );
     setCopiedTarget(target);
     setTimeout(() => setCopiedTarget(null), 2000);
+  };
+
+  const handleEnhance = async () => {
+    if (!output) return;
+    setIsEnhancing(true);
+    setEnhanceError(false);
+    try {
+      const res = await fetch("/api/enhance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          intention,
+          rules: Array.from(activeRules),
+          basePrompt: output.claude,
+        }),
+      });
+      if (!res.ok) throw new Error("enhance failed");
+      const { text } = (await res.json()) as { text: string };
+      setEnhancedOutput({ claude: text, gpt: text });
+    } catch {
+      setEnhanceError(true);
+      setTimeout(() => setEnhanceError(false), 3000);
+    } finally {
+      setIsEnhancing(false);
+    }
   };
 
   const language = detection?.language ?? null;
@@ -47,16 +87,16 @@ export function OutputPanel({
     <div className="flex flex-col gap-3">
       {isLoading ? (
         <div className="animate-pulse rounded-md bg-[--color-surface] h-48" />
-      ) : output ? (
+      ) : displayOutput ? (
         <>
           <textarea
             readOnly
-            value={output.claude}
+            value={displayOutput.claude}
             className="w-full h-64 rounded-md bg-[--color-surface] text-[--color-text] font-mono text-sm p-3 resize-y outline-hidden border border-[--color-muted] focus:border-[--color-accent] focus:ring-1 focus:ring-[--color-accent]"
             aria-label="Prompt sécurisé généré"
           />
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => handleCopy("claude")}
               disabled={!clipboardAvailable}
@@ -73,7 +113,20 @@ export function OutputPanel({
             >
               {copiedTarget === "gpt" ? "Copié !" : "Copy for GPT"}
             </button>
+            <button
+              onClick={handleEnhance}
+              disabled={isEnhancing}
+              className="px-3 py-1.5 rounded border border-[--color-muted] text-xs font-mono text-[--color-muted] hover:border-[--color-accent] hover:text-[--color-accent] disabled:opacity-40 disabled:cursor-not-allowed transition-colors ml-auto"
+            >
+              {isEnhancing ? "Enrichissement…" : enhancedOutput ? "✓ Enrichi" : "Enhance with AI"}
+            </button>
           </div>
+
+          {enhanceError && (
+            <p className="text-xs text-red-400" role="alert">
+              Enrichissement indisponible
+            </p>
+          )}
 
           <div aria-live="polite" aria-atomic="true" className="sr-only">
             {copiedTarget === "claude" && "Prompt Claude copié dans le presse-papiers"}
