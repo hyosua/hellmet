@@ -14,7 +14,7 @@ hellmet takes a plain-language coding intention and transforms it into a structu
 - [Features](#features)
 - [Installation](#installation)
 - [Running tests](#running-tests)
-- [En français](#en-français)
+- [Lire en français](README.fr.md)
 
 ---
 
@@ -151,25 +151,3 @@ The test suite covers all core modules (`detector`, `prompt-builder`, `owasp-map
 ```bash
 npm run test:watch   # watch mode
 ```
----
-
-## En français
-
-**Hellmet** est un constructeur de prompts sécurisés pour les développeurs qui travaillent avec des LLMs.
-
-Le constat de départ est simple : lorsqu'on demande à un modèle de langage de générer du code, on lui fournit généralement une intention brève et fonctionnelle — *"crée une route d'authentification"*, *"ajoute un formulaire d'upload"* — sans aucun contexte de sécurité. Le modèle produit un code qui fonctionne, mais les contraintes OWASP ne sont jamais abordées.
-
-Hellmet intercepte cette intention avant qu'elle n'atteigne le LLM, détecte automatiquement le domaine technique (API, authentification, base de données, upload, frontend, cryptographie), et injecte les règles OWASP pertinentes directement dans la structure du prompt. Le développeur n'a pas besoin de connaître la classification OWASP par coeur : l'outil fait la correspondance à sa place.
-
-Le résultat est un prompt structuré, prêt à être collé dans Claude, ChatGPT ou Cursor, dans lequel les exigences de sécurité sont formulées comme des contraintes dures — pas comme des suggestions.
-
-**Installation :**
-
-```bash
-git clone https://github.com/your-org/hellmet.git
-cd hellmet
-npm install
-npm run dev
-```
-
-La clé API Groq (`GROQ_API_KEY`) est nécessaire uniquement pour la fonctionnalité d'enrichissement IA. Le constructeur de prompts principal fonctionne sans connexion.
