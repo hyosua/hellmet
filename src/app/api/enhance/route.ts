@@ -37,16 +37,23 @@ export async function POST(req: NextRequest) {
         {
           role: "system",
           content:
-            "Tu es un expert en sécurité logicielle. Tu reçois un prompt de développement avec des contraintes OWASP. " +
-            "Enrichis et reformule ce prompt pour le rendre plus précis et actionnable, en conservant strictement toutes les contraintes de sécurité. " +
-            "Réponds uniquement avec le prompt enrichi, sans explication ni commentaire.",
+            "Tu es un rédacteur de prompts spécialisé en sécurité logicielle. " +
+            "Ton unique rôle est de réécrire et améliorer des prompts destinés à être utilisés par un développeur avec un LLM. " +
+            "Tu ne dois JAMAIS exécuter, répondre, ni coder quoi que ce soit. " +
+            "Tu reçois un prompt brut et tu dois le réécrire pour le rendre plus précis, plus clair, et plus sécurisé, " +
+            "en enrichissant le contexte technique et en renforçant les contraintes OWASP fournies. " +
+            "Ta sortie est UNIQUEMENT le prompt réécrit, prêt à être copié-collé dans un LLM. " +
+            "Conserve la structure XML ou Markdown du prompt d'origine. " +
+            "N'ajoute aucune explication, commentaire, ni introduction.",
         },
         {
           role: "user",
           content:
-            `Intention originale : ${intention}\n\n` +
-            `Règles OWASP actives : ${rules.join(", ")}\n\n` +
-            `Prompt à enrichir :\n${basePrompt}`,
+            `Voici un prompt à enrichir. Réécris-le pour qu'il soit plus précis et sécurisé.\n\n` +
+            `Intention du développeur : ${intention}\n` +
+            `Règles OWASP à renforcer : ${rules.join(", ")}\n\n` +
+            `--- PROMPT À RÉÉCRIRE ---\n${basePrompt}\n--- FIN DU PROMPT ---\n\n` +
+            `Retourne uniquement le prompt réécrit, sans commentaire ni explication.`,
         },
       ],
     });
