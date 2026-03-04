@@ -90,7 +90,6 @@ describe("OutputPanel — rendering states", () => {
   it("shows detection metadata when detection is set", () => {
     render(<OutputPanel {...defaultProps} />);
     expect(screen.getByText(/Node\.js · api/)).toBeInTheDocument();
-    expect(screen.getByText(/A01/)).toBeInTheDocument();
   });
 
   it("shows coverage score badge", () => {

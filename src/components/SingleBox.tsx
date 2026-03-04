@@ -408,7 +408,7 @@ export function SingleBox() {
           href="https://owasp.org/www-project-top-ten/"
           target="_blank"
           rel="noopener noreferrer"
-          className="hover:text-accent transition-colors"
+          className="hover:text-accent hover:underline transition-colors"
         >
           OWASP Top 10 ↗
         </a>

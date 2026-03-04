@@ -100,7 +100,7 @@ export function OutputPanel({
               onClick={handleCopy}
               disabled={!clipboardAvailable}
               title={!clipboardAvailable ? "Clipboard non disponible dans ce contexte" : undefined}
-              className={`absolute top-2 right-2 px-2 py-1 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
+              className={`absolute top-4 right-6 px-2 py-1 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
                 copied
                   ? "border-accent bg-accent text-bg font-semibold"
                   : "border-muted bg-surface text-muted hover:border-accent hover:text-accent"
@@ -110,7 +110,25 @@ export function OutputPanel({
             </button>
           </div>
 
-          <div className="flex gap-2 flex-wrap items-center">
+          <div className="flex items-center gap-4">
+            {(detection !== null || activeRules.size > 0) && (
+              <div className="flex items-center gap-3 text-xs text-muted">
+                <span
+                  className={`shrink-0 px-2 py-0.5 rounded font-mono border ${
+                    activeRules.size === 0
+                      ? "border-muted text-muted"
+                      : activeRules.size >= TOTAL_RULES / 2
+                      ? "border-accent text-accent"
+                      : "border-yellow-500 text-yellow-500"
+                  }`}
+                  title="Couverture OWASP"
+                  aria-label={`Couverture OWASP : ${activeRules.size} sur ${TOTAL_RULES} règles actives`}
+                >
+                  {activeRules.size}/{TOTAL_RULES} règles
+                </span>
+                <span>{detectionLine}</span>
+              </div>
+            )}
             <button
               onClick={handleEnhance}
               disabled={isEnhancing || !!enhancedOutput}
@@ -141,33 +159,6 @@ export function OutputPanel({
         </div>
       )}
 
-      {(detection !== null || activeRules.size > 0) && !isLoading && (
-        <div className="flex items-start justify-between gap-4">
-          <div className="text-xs text-muted space-y-0.5">
-            <p>
-              <span className="text-accent">Détection</span> :{" "}
-              {detectionLine}
-            </p>
-            <p>
-              <span className="text-accent">Règles injectées</span> :{" "}
-              {rulesLine}
-            </p>
-          </div>
-          <span
-            className={`shrink-0 px-2 py-0.5 rounded text-xs font-mono border ${
-              activeRules.size === 0
-                ? "border-muted text-muted"
-                : activeRules.size >= TOTAL_RULES / 2
-                ? "border-accent text-accent"
-                : "border-yellow-500 text-yellow-500"
-            }`}
-            title="Couverture OWASP"
-            aria-label={`Couverture OWASP : ${activeRules.size} sur ${TOTAL_RULES} règles actives`}
-          >
-            {activeRules.size}/{TOTAL_RULES} règles
-          </span>
-        </div>
-      )}
     </div>
   );
 }
