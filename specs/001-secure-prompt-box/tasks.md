@@ -54,10 +54,10 @@ description: "Task list for Hellmet — Secure Prompt Box"
 
 **Independent Test**: Type `"Crée une route d'api pour uploader des images en Node"`, click Run → verify output contains A01 and A04 constraints, detection shows `Node.js · upload`, rules `A01, A04`.
 
-- [ ] T016 [P] [US1] Implement `src/app/layout.tsx` — root Next.js layout: dark background (`bg-[--color-bg]`), mono font, full-height body; import `globals.css`
-- [ ] T017 [US1] Implement `src/components/OutputPanel.tsx` (US1 scope) — receive `output: PromptOutput|null`, `isLoading: boolean`, `detection: Detection|null`, `activeRules: Set<string>`; render: loading skeleton when `isLoading`, placeholder text when no output, readonly `<textarea>` with prompt when output exists; render detection metadata line: `Détection : {language} · {domain}` and `Règles injectées : {A01, A04, …}`; NO copy buttons yet (added in US3)
-- [ ] T018 [US1] Implement `src/components/SingleBox.tsx` — owns `AppState` via `useReducer`; render: header "Hellmet", intention `<textarea>` (placeholder: "Décris ce que tu veux coder…"), `[→ Run]` submit button (also fires on Ctrl+Enter), Toggles placeholder div, `<OutputPanel />`; on submit: runs `detect()` → `DOMAIN_MAP` → `getConstraint()` → `buildPrompt()` → sets output; shows error if intention is empty
-- [ ] T019 [US1] Implement `src/app/page.tsx` — renders `<SingleBox />` as a Client Component (`"use client"`)
+- [x] T016 [P] [US1] Implement `src/app/layout.tsx` — root Next.js layout: dark background (`bg-[--color-bg]`), mono font, full-height body; import `globals.css`
+- [x] T017 [US1] Implement `src/components/OutputPanel.tsx` (US1 scope) — receive `output: PromptOutput|null`, `isLoading: boolean`, `detection: Detection|null`, `activeRules: Set<string>`; render: loading skeleton when `isLoading`, placeholder text when no output, readonly `<textarea>` with prompt when output exists; render detection metadata line: `Détection : {language} · {domain}` and `Règles injectées : {A01, A04, …}`; NO copy buttons yet (added in US3)
+- [x] T018 [US1] Implement `src/components/SingleBox.tsx` — owns `AppState` via `useReducer`; render: header "Hellmet", intention `<textarea>` (placeholder: "Décris ce que tu veux coder…"), `[→ Run]` submit button (also fires on Ctrl+Enter), Toggles placeholder div, `<OutputPanel />`; on submit: runs `detect()` → `DOMAIN_MAP` → `getConstraint()` → `buildPrompt()` → sets output; shows error if intention is empty
+- [x] T019 [US1] Implement `src/app/page.tsx` — renders `<SingleBox />` as a Client Component (`"use client"`)
 
 **Checkpoint**: User Story 1 fully functional. Type intention → prompt generated → metadata shown. `npm run dev` and verify manually against 3 acceptance scenarios from spec.md.
 
