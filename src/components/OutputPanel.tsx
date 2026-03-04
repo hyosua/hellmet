@@ -102,10 +102,10 @@ export function OutputPanel({
               role="tab"
               aria-selected={activeFormat === "claude"}
               onClick={() => setActiveFormat("claude")}
-              className={`px-3 py-1 rounded-t text-xs font-mono transition-colors border-b-2 ${
+              className={`px-3 py-1.5 rounded text-xs font-mono transition-colors ${
                 activeFormat === "claude"
-                  ? "border-[--color-accent] text-[--color-accent]"
-                  : "border-transparent text-[--color-muted] hover:text-[--color-text]"
+                  ? "bg-[--color-accent] text-[--color-bg] font-semibold"
+                  : "text-[--color-muted] hover:text-[--color-text]"
               }`}
             >
               Claude XML
@@ -114,10 +114,10 @@ export function OutputPanel({
               role="tab"
               aria-selected={activeFormat === "gpt"}
               onClick={() => setActiveFormat("gpt")}
-              className={`px-3 py-1 rounded-t text-xs font-mono transition-colors border-b-2 ${
+              className={`px-3 py-1.5 rounded text-xs font-mono transition-colors ${
                 activeFormat === "gpt"
-                  ? "border-[--color-accent] text-[--color-accent]"
-                  : "border-transparent text-[--color-muted] hover:text-[--color-text]"
+                  ? "bg-[--color-accent] text-[--color-bg] font-semibold"
+                  : "text-[--color-muted] hover:text-[--color-text]"
               }`}
             >
               GPT Markdown
@@ -136,14 +136,22 @@ export function OutputPanel({
               onClick={handleCopy}
               disabled={!clipboardAvailable}
               title={!clipboardAvailable ? "Clipboard non disponible dans ce contexte" : undefined}
-              className="px-3 py-1.5 rounded border border-[--color-muted] text-xs font-mono text-[--color-text] hover:border-[--color-accent] hover:text-[--color-accent] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className={`px-3 py-1.5 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
+                copiedTarget
+                  ? "border-[--color-accent] bg-[--color-accent] text-[--color-bg] font-semibold"
+                  : "border-[--color-muted] text-[--color-text] hover:border-[--color-accent] hover:text-[--color-accent]"
+              }`}
             >
               {copiedTarget ? "Copié !" : `Copy for ${activeFormat === "claude" ? "Claude" : "GPT"}`}
             </button>
             <button
               onClick={handleEnhance}
               disabled={isEnhancing}
-              className="px-3 py-1.5 rounded border border-[--color-muted] text-xs font-mono text-[--color-muted] hover:border-[--color-accent] hover:text-[--color-accent] disabled:opacity-40 disabled:cursor-not-allowed transition-colors ml-auto"
+              className={`px-3 py-1.5 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ml-auto ${
+                enhancedOutput
+                  ? "border-[--color-accent] bg-[--color-accent]/15 text-[--color-accent]"
+                  : "border-[--color-muted] text-[--color-muted] hover:border-[--color-accent] hover:text-[--color-accent]"
+              }`}
             >
               {isEnhancing ? "Enrichissement…" : enhancedOutput ? "✓ Enrichi" : "Enhance with AI"}
             </button>
