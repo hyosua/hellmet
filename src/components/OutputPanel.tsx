@@ -89,26 +89,28 @@ export function OutputPanel({
         <div className="animate-pulse rounded-md bg-surface h-48" />
       ) : displayText ? (
         <>
-          <textarea
-            readOnly
-            value={displayText}
-            className="w-full h-64 rounded-md bg-surface text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent"
-            aria-label="Prompt sécurisé"
-          />
-
-          <div className="flex gap-2 flex-wrap items-center">
+          <div className="relative">
+            <textarea
+              readOnly
+              value={displayText}
+              className="w-full h-64 rounded-md bg-surface text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent"
+              aria-label="Prompt sécurisé"
+            />
             <button
               onClick={handleCopy}
               disabled={!clipboardAvailable}
               title={!clipboardAvailable ? "Clipboard non disponible dans ce contexte" : undefined}
-              className={`px-3 py-1.5 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
+              className={`absolute top-2 right-2 px-2 py-1 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
                 copied
                   ? "border-accent bg-accent text-bg font-semibold"
-                  : "border-muted text-text hover:border-accent hover:text-accent"
+                  : "border-muted bg-surface text-muted hover:border-accent hover:text-accent"
               }`}
             >
               {copied ? "Copié !" : "Copy"}
             </button>
+          </div>
+
+          <div className="flex gap-2 flex-wrap items-center">
             <button
               onClick={handleEnhance}
               disabled={isEnhancing || !!enhancedOutput}
