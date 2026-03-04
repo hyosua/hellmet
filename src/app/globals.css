@@ -9,6 +9,13 @@
   --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 }
 
+html.light {
+  --color-bg: oklch(0.97 0 0);
+  --color-surface: oklch(0.93 0 0);
+  --color-text: oklch(0.15 0 0);
+  --color-muted: oklch(0.45 0 0);
+}
+
 *,
 *::before,
 *::after {

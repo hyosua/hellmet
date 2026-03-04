@@ -8,6 +8,7 @@ import { getRulesByIds } from "@/core/constraints";
 import { buildPrompt } from "@/core/prompt-builder";
 import { OutputPanel } from "./OutputPanel";
 import { Toggles } from "./Toggles";
+import { ThemeToggle } from "./ThemeToggle";
 
 // ---------------------------------------------------------------------------
 // History
@@ -239,11 +240,45 @@ export function SingleBox() {
 
   return (
     <main className="min-h-screen flex flex-col items-center px-4 py-12">
+      {/* Fixed top-right controls */}
+      <div className="fixed top-4 right-4 flex items-center gap-2">
+        <button
+          role="switch"
+          aria-checked={state.lang === "en"}
+          aria-label="Langue de sortie"
+          onClick={() =>
+            dispatch({ type: "SET_LANG", lang: state.lang === "fr" ? "en" : "fr" })
+          }
+          className="relative flex items-center w-18 h-8 rounded-full border border-muted bg-surface cursor-pointer select-none shrink-0 focus-visible:ring-1 focus-visible:ring-accent"
+        >
+          <span
+            aria-hidden="true"
+            className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-full bg-accent transition-all duration-200 ease-in-out ${
+              state.lang === "en" ? "left-[calc(50%+1px)]" : "left-0.5"
+            }`}
+          />
+          <span
+            className={`relative z-10 w-1/2 text-center text-[11px] font-mono uppercase font-semibold transition-colors duration-200 ${
+              state.lang === "fr" ? "text-bg" : "text-muted"
+            }`}
+          >
+            FR
+          </span>
+          <span
+            className={`relative z-10 w-1/2 text-center text-[11px] font-mono uppercase font-semibold transition-colors duration-200 ${
+              state.lang === "en" ? "text-bg" : "text-muted"
+            }`}
+          >
+            EN
+          </span>
+        </button>
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-2xl flex flex-col gap-6">
         <div>
           <div className="flex items-baseline gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-accent">
-              he<span className="text-white">llm</span>et
+              he<span className="text-muted">llm</span>et
             </h1>
             <span className="text-xs font-mono text-muted tracking-widest  italic">—secure the prompt—</span>
           </div>
@@ -273,40 +308,6 @@ export function SingleBox() {
 
         <div className="flex items-center gap-2">
 
-          {/* FR / EN toggle switch */}
-          <button
-            role="switch"
-            aria-checked={state.lang === "en"}
-            aria-label="Langue de sortie"
-            onClick={() =>
-              dispatch({ type: "SET_LANG", lang: state.lang === "fr" ? "en" : "fr" })
-            }
-            className="relative flex items-center w-18 h-8 rounded-full border border-muted bg-surface cursor-pointer select-none shrink-0 focus-visible:ring-1 focus-visible:ring-accent"
-          >
-            {/* sliding thumb */}
-            <span
-              aria-hidden="true"
-              className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-full bg-accent transition-all duration-200 ease-in-out ${
-                state.lang === "en" ? "left-[calc(50%+1px)]" : "left-0.5"
-              }`}
-            />
-            {/* labels */}
-            <span
-              className={`relative z-10 w-1/2 text-center text-[11px] font-mono uppercase font-semibold transition-colors duration-200 ${
-                state.lang === "fr" ? "text-bg" : "text-muted"
-              }`}
-            >
-              FR
-            </span>
-            <span
-              className={`relative z-10 w-1/2 text-center text-[11px] font-mono uppercase font-semibold transition-colors duration-200 ${
-                state.lang === "en" ? "text-bg" : "text-muted"
-              }`}
-            >
-              EN
-            </span>
-          </button>
-
           {/* History */}
           {history.length > 0 && (
             <button
@@ -323,7 +324,7 @@ export function SingleBox() {
           <button
             onClick={() => dispatch({ type: "CLEAR" })}
             disabled={!state.intention && !state.output}
-            className="px-4 py-2.5 rounded-md border border-red-500/60 text-red-400 font-mono text-sm hover:bg-red-500/10 hover:border-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-red-500/60"
+            className="px-4 py-2.5 rounded-md border border-red-500/60 bg-red-500/10 text-red-400 font-mono text-sm hover:bg-red-700/10 hover:border-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-red-500/60"
             aria-label="Effacer tout"
           >
             ✕ Clear

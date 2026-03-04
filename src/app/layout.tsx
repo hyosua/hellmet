@@ -13,6 +13,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `try{if(localStorage.getItem('theme')==='light')document.documentElement.classList.add('light')}catch{}` }} />
+      </head>
       <body className="min-h-screen bg-bg text-text font-mono antialiased">
         {children}
       </body>
