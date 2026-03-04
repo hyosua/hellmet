@@ -11,6 +11,47 @@ import { Toggles } from "./Toggles";
 import { ThemeToggle } from "./ThemeToggle";
 
 // ---------------------------------------------------------------------------
+// UI Labels
+// ---------------------------------------------------------------------------
+
+const UI = {
+  fr: {
+    subtitle: "Ajoutez un contexte de sécurité avant de demander à une IA.",
+    placeholder: "Ex : route API Node.js pour uploader des images avec JWT",
+    ariaTextarea: "Intention de code",
+    errorEmpty: "L'intention ne peut pas être vide. — Immanuel Hackant",
+    historyBtn: (n: number, open: boolean) => `${open ? "✕" : "⏱"} Historique (${n})`,
+    ariaLang: "Langue de sortie",
+    clear: "✕ Clear",
+    ariaClear: "Effacer tout",
+    run: "→ Run",
+    ariaRun: "Générer le prompt sécurisé (Entrée)",
+    owaspLabel: "Règles OWASP",
+    owaspTooltip: "OWASP Top 10 — liste des vulnérabilités web les plus critiques. Chaque règle correspond à une catégorie de risque (injection, auth, accès…).",
+    owaspDesc: "— détectées selon ton code, activables manuellement.",
+    resetToggles: "Tout désactiver",
+    locale: "fr-FR" as const,
+  },
+  en: {
+    subtitle: "Add a security context before asking AI.",
+    placeholder: "Ex: Node.js API route to upload images with JWT",
+    ariaTextarea: "Code intention",
+    errorEmpty: "Intention cannot be empty. — Immanuel Hackant",
+    historyBtn: (n: number, open: boolean) => `${open ? "✕" : "⏱"} History (${n})`,
+    ariaLang: "Output language",
+    clear: "✕ Clear",
+    ariaClear: "Clear all",
+    run: "→ Run",
+    ariaRun: "Generate secure prompt (Enter)",
+    owaspLabel: "OWASP Rules",
+    owaspTooltip: "OWASP Top 10 — the most critical web vulnerability categories. Each rule maps to a risk type (injection, auth, access…).",
+    owaspDesc: "— detected from your code, can be toggled manually.",
+    resetToggles: "Disable all",
+    locale: "en-US" as const,
+  },
+} as const;
+
+// ---------------------------------------------------------------------------
 // History
 // ---------------------------------------------------------------------------
 
@@ -190,7 +231,7 @@ export function SingleBox() {
 
   const handleSubmit = useCallback(() => {
     if (!state.intention.trim()) {
-      dispatch({ type: "SET_ERROR", message: "L'intention ne peut pas être vide. — Immanuel Hackant" });
+      dispatch({ type: "SET_ERROR", message: UI[state.lang].errorEmpty });
       return;
     }
 
@@ -230,6 +271,8 @@ export function SingleBox() {
     setHistoryOpen(false);
   }, []);
 
+  const L = UI[state.lang];
+
   const autoDetected = new Set(state.autoRuleIds);
   const manualToggles = new Set(
     (Object.entries(state.toggles) as [OWASPRuleId, boolean][])
@@ -245,7 +288,7 @@ export function SingleBox() {
         <button
           role="switch"
           aria-checked={state.lang === "en"}
-          aria-label="Langue de sortie"
+          aria-label={L.ariaLang}
           onClick={() =>
             dispatch({ type: "SET_LANG", lang: state.lang === "fr" ? "en" : "fr" })
           }
@@ -283,7 +326,7 @@ export function SingleBox() {
             <span className="text-xs font-mono text-muted tracking-widest  italic">—secure the prompt—</span>
           </div>
           <p className="mt-1 text-sm text-muted">
-            Add a security context before asking AI.
+            {L.subtitle}
           </p>
         </div>
 
@@ -294,10 +337,10 @@ export function SingleBox() {
               dispatch({ type: "SET_INTENTION", payload: e.target.value })
             }
             onKeyDown={handleKeyDown}
-            placeholder="Ex : route API Node.js pour uploader des images avec JWT"
+            placeholder={L.placeholder}
             rows={3}
             className="w-full rounded-md bg-bg text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent placeholder:text-muted"
-            aria-label="Intention de code"
+            aria-label={L.ariaTextarea}
           />
 
           {state.error && (
@@ -316,7 +359,7 @@ export function SingleBox() {
               aria-expanded={historyOpen}
               aria-controls="history-panel"
             >
-              {historyOpen ? "✕" : "⏱"} Historique ({history.length})
+              {L.historyBtn(history.length, historyOpen)}
             </button>
           )}
 
@@ -325,9 +368,9 @@ export function SingleBox() {
             onClick={() => dispatch({ type: "CLEAR" })}
             disabled={!state.intention && !state.output}
             className="px-4 py-2.5 rounded-md border border-red-500/60 bg-red-500/10 text-red-400 font-mono text-sm hover:bg-red-700/10 hover:border-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-red-500/60"
-            aria-label="Effacer tout"
+            aria-label={L.ariaClear}
           >
-            ✕ Clear
+            {L.clear}
           </button>
 
           {/* Run — pushed to the right */}
@@ -335,9 +378,9 @@ export function SingleBox() {
             onClick={handleSubmit}
             disabled={state.isLoading}
             className="ml-auto flex items-center gap-2.5 px-5 py-2.5 rounded-md bg-accent text-bg font-mono font-semibold text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-            aria-label="Générer le prompt sécurisé (Entrée)"
+            aria-label={L.ariaRun}
           >
-            → Run
+            {L.run}
           </button>
         </div>
         </div>
@@ -353,7 +396,7 @@ export function SingleBox() {
                 title={entry.intention}
               >
                 <span className="text-accent">
-                  {new Date(entry.timestamp).toLocaleTimeString("fr-FR", {
+                  {new Date(entry.timestamp).toLocaleTimeString(L.locale, {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
@@ -369,18 +412,18 @@ export function SingleBox() {
             <p className="text-xs text-muted">
               <span
                 className="text-text cursor-help"
-                title="OWASP Top 10 — liste des vulnérabilités web les plus critiques. Chaque règle correspond à une catégorie de risque (injection, auth, accès…)."
+                title={L.owaspTooltip}
               >
-                Règles OWASP
+                {L.owaspLabel}
               </span>{" "}
-              — détectées selon ton code, activables manuellement.
+              {L.owaspDesc}
             </p>
             {manualToggles.size > 0 && (
               <button
                 onClick={() => dispatch({ type: "RESET_TOGGLES" })}
                 className="shrink-0 text-xs font-mono text-muted hover:text-text transition-colors"
               >
-                Tout désactiver
+                {L.resetToggles}
               </button>
             )}
           </div>
@@ -399,6 +442,7 @@ export function SingleBox() {
             detection={state.detection}
             activeRules={activeRules}
             intention={state.intention}
+            lang={state.lang}
           />
         </div>
       </div>

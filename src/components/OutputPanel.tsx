@@ -4,12 +4,54 @@ import { useState, useEffect } from "react";
 import type { Detection, OWASPRuleId, PromptOutput } from "@/core/types";
 import { getRules } from "@/core/constraints";
 
+type Lang = "fr" | "en";
+
+const UI = {
+  fr: {
+    copy: "Copy",
+    copied: "Copié !",
+    clipboardUnavailable: "Clipboard non disponible dans ce contexte",
+    owaspCoverage: "Couverture OWASP",
+    owaspAriaLabel: (a: number, t: number) => `Couverture OWASP : ${a} sur ${t} règles actives`,
+    rules: (a: number, t: number) => `${a}/${t} règles`,
+    noDetection: "Aucune détection",
+    enhancing: "Enrichissement…",
+    enhanced: "✓ Enrichi",
+    enhance: "Enhance with AI",
+    enhancedTitle: "Prompt enrichi par l'IA",
+    enhanceTitle: "Enrichit le prompt généré pour le rendre plus précis et robuste",
+    enhanceError: "Enrichissement indisponible",
+    srCopied: "Prompt copié dans le presse-papiers",
+    placeholder: "Le prompt sécurisé apparaîtra ici",
+    ariaTextarea: "Prompt sécurisé",
+  },
+  en: {
+    copy: "Copy",
+    copied: "Copied!",
+    clipboardUnavailable: "Clipboard not available in this context",
+    owaspCoverage: "OWASP Coverage",
+    owaspAriaLabel: (a: number, t: number) => `OWASP coverage: ${a} of ${t} rules active`,
+    rules: (a: number, t: number) => `${a}/${t} rules`,
+    noDetection: "No detection",
+    enhancing: "Enhancing…",
+    enhanced: "✓ Enhanced",
+    enhance: "Enhance with AI",
+    enhancedTitle: "AI-enhanced prompt",
+    enhanceTitle: "Enriches the generated prompt for more precision and security",
+    enhanceError: "Enhancement unavailable",
+    srCopied: "Prompt copied to clipboard",
+    placeholder: "The secure prompt will appear here",
+    ariaTextarea: "Secure prompt",
+  },
+} as const;
+
 interface OutputPanelProps {
   output: PromptOutput | null;
   isLoading: boolean;
   detection: Detection | null;
   activeRules: Set<OWASPRuleId>;
   intention: string;
+  lang?: Lang;
 }
 
 const TOTAL_RULES = getRules().length;
@@ -20,7 +62,9 @@ export function OutputPanel({
   detection,
   activeRules,
   intention,
+  lang = "fr",
 }: OutputPanelProps) {
+  const L = UI[lang];
   const [clipboardAvailable, setClipboardAvailable] = useState(false);
   const [copied, setCopied] = useState(false);
   const [enhancedOutput, setEnhancedOutput] = useState<string | null>(null);
@@ -78,10 +122,7 @@ export function OutputPanel({
   const detectionLine =
     language || domains.length > 0
       ? [language, ...domains].filter(Boolean).join(" · ")
-      : "Aucune détection";
-
-  const rulesLine =
-    activeRules.size > 0 ? Array.from(activeRules).join(", ") : "Aucune";
+      : L.noDetection;
 
   return (
     <div className="flex flex-col gap-3">
@@ -94,19 +135,19 @@ export function OutputPanel({
               readOnly
               value={displayText}
               className="w-full h-64 rounded-md bg-surface text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent"
-              aria-label="Prompt sécurisé"
+              aria-label={L.ariaTextarea}
             />
             <button
               onClick={handleCopy}
               disabled={!clipboardAvailable}
-              title={!clipboardAvailable ? "Clipboard non disponible dans ce contexte" : undefined}
+              title={!clipboardAvailable ? L.clipboardUnavailable : undefined}
               className={`absolute top-4 right-6 px-2 py-1 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
                 copied
                   ? "border-accent bg-accent text-bg font-semibold"
                   : "border-muted bg-surface text-muted hover:border-accent hover:text-accent"
               }`}
             >
-              {copied ? "Copié !" : "Copy"}
+              {copied ? L.copied : L.copy}
             </button>
           </div>
 
@@ -121,10 +162,10 @@ export function OutputPanel({
                       ? "border-accent text-accent"
                       : "border-yellow-500 text-yellow-500"
                   }`}
-                  title="Couverture OWASP"
-                  aria-label={`Couverture OWASP : ${activeRules.size} sur ${TOTAL_RULES} règles actives`}
+                  title={L.owaspCoverage}
+                  aria-label={L.owaspAriaLabel(activeRules.size, TOTAL_RULES)}
                 >
-                  {activeRules.size}/{TOTAL_RULES} règles
+                  {L.rules(activeRules.size, TOTAL_RULES)}
                 </span>
                 <span>{detectionLine}</span>
               </div>
@@ -132,30 +173,30 @@ export function OutputPanel({
             <button
               onClick={handleEnhance}
               disabled={isEnhancing || !!enhancedOutput}
-              title={enhancedOutput ? "Prompt enrichi par l'IA" : "Enrichit le prompt généré pour le rendre plus précis et robuste"}
+              title={enhancedOutput ? L.enhancedTitle : L.enhanceTitle}
               className={`px-3 py-1.5 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ml-auto ${
                 enhancedOutput
                   ? "border-accent bg-accent/15 text-accent"
                   : "border-muted text-muted hover:border-accent hover:text-accent"
               }`}
             >
-              {isEnhancing ? "Enrichissement…" : enhancedOutput ? "✓ Enrichi" : "Enhance with AI"}
+              {isEnhancing ? L.enhancing : enhancedOutput ? L.enhanced : L.enhance}
             </button>
           </div>
 
           {enhanceError && (
             <p className="text-xs text-red-400" role="alert">
-              Enrichissement indisponible
+              {L.enhanceError}
             </p>
           )}
 
           <div aria-live="polite" aria-atomic="true" className="sr-only">
-            {copied && "Prompt copié dans le presse-papiers"}
+            {copied && L.srCopied}
           </div>
         </>
       ) : (
         <div className="flex items-center justify-center h-48 rounded-md bg-surface text-muted text-sm">
-          Le prompt sécurisé apparaîtra ici
+          {L.placeholder}
         </div>
       )}
 
