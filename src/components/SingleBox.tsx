@@ -398,6 +398,17 @@ export function SingleBox() {
           />
         </div>
       </div>
+
+      <footer className="mt-8 text-xs text-muted font-mono">
+        <a
+          href="https://owasp.org/www-project-top-ten/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-accent transition-colors"
+        >
+          OWASP Top 10 ↗
+        </a>
+      </footer>
     </main>
   );
 }
