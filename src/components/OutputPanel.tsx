@@ -154,6 +154,7 @@ export function OutputPanel({
             <button
               onClick={handleEnhance}
               disabled={isEnhancing}
+              title={enhancedOutput ? "Prompt enrichi par l'IA" : "Enrichit le prompt généré pour le rendre plus précis et robuste"}
               className={`px-3 py-1.5 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ml-auto ${
                 enhancedOutput
                   ? "border-accent bg-accent/15 text-accent"
