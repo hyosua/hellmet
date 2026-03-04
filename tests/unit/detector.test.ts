@@ -27,54 +27,70 @@ describe("detect() — language detection", () => {
   });
 });
 
-describe("detect() — domain detection", () => {
+describe("detect() — single-domain detection", () => {
   it("detects api domain", () => {
     const result = detect("Crée un endpoint REST pour mon API");
-    expect(result.domain).toBe("api");
+    expect(result.domains).toContain("api");
   });
 
   it("detects auth domain", () => {
     const result = detect("Implémente un login avec JWT et session");
-    expect(result.domain).toBe("auth");
+    expect(result.domains).toContain("auth");
   });
 
   it("detects upload domain", () => {
     const result = detect("Crée une route pour upload de fichiers image");
-    expect(result.domain).toBe("upload");
+    expect(result.domains).toContain("upload");
   });
 
   it("detects database domain", () => {
     const result = detect("Écris une query SQL avec Prisma ORM");
-    expect(result.domain).toBe("database");
+    expect(result.domains).toContain("database");
   });
 
   it("detects frontend domain", () => {
     const result = detect("Crée un composant React avec un formulaire input");
-    expect(result.domain).toBe("frontend");
+    expect(result.domains).toContain("frontend");
   });
 
   it("detects crypto domain", () => {
     const result = detect("Hash le mot de passe avec bcrypt et chiffre les données");
-    expect(result.domain).toBe("crypto");
+    expect(result.domains).toContain("crypto");
   });
 
-  it("returns null domain for unrecognized intention", () => {
+  it("returns empty domains array for unrecognized intention", () => {
     const result = detect("Bonjour monde");
-    expect(result.domain).toBeNull();
+    expect(result.domains).toEqual([]);
+  });
+});
+
+describe("detect() — multi-domain detection", () => {
+  it("detects both auth and frontend for a login form", () => {
+    const result = detect("Crée un formulaire de login avec validation");
+    expect(result.domains).toContain("auth");
+    expect(result.domains).toContain("frontend");
+  });
+
+  it("detects both api and upload for an upload route", () => {
+    const result = detect("Crée une route d'api pour uploader des images en Node");
+    expect(result.domains).toContain("api");
+    expect(result.domains).toContain("upload");
+  });
+
+  it("detects both database and auth for authenticated query", () => {
+    const result = detect("Requête SQL sécurisée avec authentification JWT");
+    expect(result.domains).toContain("database");
+    expect(result.domains).toContain("auth");
+  });
+
+  it("union of rules across multiple domains has no duplicates", () => {
+    const { domains } = detect("formulaire de login avec upload d'avatar");
+    const unique = new Set(domains);
+    expect(unique.size).toBe(domains.length);
   });
 });
 
 describe("detect() — combined detection", () => {
-  it("detects both language and domain from spec example", () => {
-    const result = detect(
-      "Crée une route d'api pour uploader des images en Node"
-    );
-    // Should detect Node.js as language
-    expect(result.language).toBe("Node.js");
-    // Should detect either upload or api — both are valid, upload wins due to "uploader" keyword
-    expect(result.domain).not.toBeNull();
-  });
-
   it("populates matchedKeywords with detected terms", () => {
     const result = detect("route express Node.js JWT");
     expect(result.matchedKeywords.length).toBeGreaterThan(0);

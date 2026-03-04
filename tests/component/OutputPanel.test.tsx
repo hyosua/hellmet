@@ -14,7 +14,7 @@ const mockOutput: PromptOutput = {
 
 const mockDetection: Detection = {
   language: "Node.js",
-  domain: "api",
+  domains: ["api"],
   matchedKeywords: ["node", "api"],
 };
 

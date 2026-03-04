@@ -16,7 +16,7 @@ export interface OWASPRule {
 
 export interface Detection {
   language: string | null;
-  domain: DomainKey | null;
+  domains: DomainKey[];
   matchedKeywords: string[];
 }
 

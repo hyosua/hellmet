@@ -85,9 +85,8 @@ export function detect(text: string): Detection {
     }
   }
 
-  // --- Domain detection: pick the domain with the most keyword hits ---
-  let bestDomain: DomainKey | null = null;
-  let bestDomainScore = 0;
+  // --- Domain detection: collect all domains with at least 1 keyword hit ---
+  const matchedDomains: DomainKey[] = [];
 
   for (const [domain, keywords] of Object.entries(DOMAIN_KEYWORDS) as [DomainKey, string[]][]) {
     let score = 0;
@@ -97,15 +96,14 @@ export function detect(text: string): Detection {
         if (!matched.includes(kw)) matched.push(kw);
       }
     }
-    if (score > bestDomainScore) {
-      bestDomainScore = score;
-      bestDomain = domain;
+    if (score >= 1) {
+      matchedDomains.push(domain);
     }
   }
 
   return {
     language: bestLangScore > 0 ? bestLanguage : null,
-    domain: bestDomainScore > 0 ? bestDomain : null,
+    domains: matchedDomains,
     matchedKeywords: [...new Set(matched)],
   };
 }

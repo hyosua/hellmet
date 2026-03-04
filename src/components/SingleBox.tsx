@@ -108,8 +108,7 @@ export function SingleBox() {
     dispatch({ type: "START_LOADING" });
 
     const detection = detect(state.intention);
-    const domains = detection.domain ? [detection.domain] : [];
-    const autoRuleIds = getRulesForDomains(domains);
+    const autoRuleIds = getRulesForDomains(detection.domains);
     const allIds = effectiveRuleIds(autoRuleIds, state.toggles);
     const rules = getRulesByIds(allIds);
     const output = buildPrompt(state.intention, rules);

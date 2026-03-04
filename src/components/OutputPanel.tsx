@@ -73,11 +73,11 @@ export function OutputPanel({
   };
 
   const language = detection?.language ?? null;
-  const domain = detection?.domain ?? null;
+  const domains = detection?.domains ?? [];
 
   const detectionLine =
-    language || domain
-      ? [language, domain].filter(Boolean).join(" · ")
+    language || domains.length > 0
+      ? [language, ...domains].filter(Boolean).join(" · ")
       : "Aucune détection";
 
   const rulesLine =
@@ -139,7 +139,7 @@ export function OutputPanel({
         </div>
       )}
 
-      {(detection !== null || activeRules.size > 0) && (
+      {(detection !== null || activeRules.size > 0) && !isLoading && (
         <div className="text-xs text-[--color-muted] space-y-0.5">
           <p>
             <span className="text-[--color-accent]">Détection</span> :{" "}
