@@ -13,8 +13,11 @@ const TOGGLE_RULES: { id: OWASPRuleId; label: string }[] = [
   { id: "A02", label: "A02 Crypto" },
   { id: "A03", label: "A03 Injection" },
   { id: "A04", label: "A04 Insecure Design" },
+  { id: "A06", label: "A06 Components" },
   { id: "A07", label: "A07 Auth" },
+  { id: "A08", label: "A08 Integrity" },
   { id: "A09", label: "A09 Logging" },
+  { id: "A10", label: "A10 SSRF" },
 ];
 
 export function Toggles({ activeToggles, autoDetected, onChange }: TogglesProps) {

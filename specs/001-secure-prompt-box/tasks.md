@@ -115,9 +115,9 @@ description: "Task list for Hellmet — Secure Prompt Box"
 
 ### 7B — OWASP Rule Coverage
 
-- [ ] T037 [P] Add missing OWASP 2025 entries to `src/data/rules.json` — A06 (Vulnerable Components), A08 (Software & Data Integrity Failures), A10 (SSRF); add `severity: "critical"|"high"|"medium"` field to all 10 entries
-- [ ] T038 [P] Add A06, A08, A10 to `DOMAIN_MAP` in `src/core/owasp-map.ts` where relevant (e.g., A06 → api, A08 → upload/api, A10 → api); add missing toggle buttons to `Toggles.tsx` if new rules are manually activatable
-- [ ] T039 [P] Update `buildPrompt()` in `src/core/prompt-builder.ts` — sort injected rules by `severity` (critical first) before formatting constraint lines
+- [x] T037 [P] Add missing OWASP 2025 entries to `src/data/rules.json` — A06 (Vulnerable Components), A08 (Software & Data Integrity Failures), A10 (SSRF); add `severity: "critical"|"high"|"medium"` field to all 10 entries
+- [x] T038 [P] Add A06, A08, A10 to `DOMAIN_MAP` in `src/core/owasp-map.ts` where relevant (e.g., A06 → api, A08 → upload/api, A10 → api); add missing toggle buttons to `Toggles.tsx` if new rules are manually activatable
+- [x] T039 [P] Update `buildPrompt()` in `src/core/prompt-builder.ts` — sort injected rules by `severity` (critical first) before formatting constraint lines
 
 ### 7C — UI Improvements
 

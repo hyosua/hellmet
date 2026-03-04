@@ -19,8 +19,11 @@ const INITIAL_TOGGLES: Record<OWASPRuleId, boolean> = {
   A03: false,
   A04: false,
   A05: false,
+  A06: false,
   A07: false,
+  A08: false,
   A09: false,
+  A10: false,
 };
 
 type ExtendedState = AppState & {

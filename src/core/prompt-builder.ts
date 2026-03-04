@@ -1,4 +1,12 @@
-import type { OWASPRule, PromptOutput } from "./types";
+import type { OWASPRule, PromptOutput, Severity } from "./types";
+
+const SEVERITY_ORDER: Record<Severity, number> = { critical: 0, high: 1, medium: 2 };
+
+function sortBySeverity(rules: OWASPRule[]): OWASPRule[] {
+  return [...rules].sort(
+    (a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]
+  );
+}
 
 const NO_CONSTRAINTS_NOTICE =
   "Aucune contrainte de sécurité spécifique n'a été détectée. " +
@@ -59,8 +67,9 @@ export function buildPrompt(
   intention: string,
   rules: OWASPRule[]
 ): PromptOutput {
+  const sorted = sortBySeverity(rules);
   return {
-    claude: buildClaudeFormat(intention, rules),
-    gpt: buildGptFormat(intention, rules),
+    claude: buildClaudeFormat(intention, sorted),
+    gpt: buildGptFormat(intention, sorted),
   };
 }

@@ -2,10 +2,10 @@ import type { DomainKey, OWASPRuleId } from "./types";
 
 export const DOMAIN_MAP: Record<DomainKey, OWASPRuleId[]> = {
   auth: ["A02", "A07"],
-  upload: ["A01", "A04"],
+  upload: ["A01", "A04", "A08"],
   database: ["A03"],
-  api: ["A01", "A05"],
-  frontend: ["A03", "A05"],
+  api: ["A01", "A05", "A06", "A08", "A10"],
+  frontend: ["A03", "A05", "A06"],
   crypto: ["A02"],
 };
 

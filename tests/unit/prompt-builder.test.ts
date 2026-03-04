@@ -5,11 +5,13 @@ const mockRules: OWASPRule[] = [
   {
     id: "A01",
     name: "Access Control",
+    severity: "critical",
     constraint: "Vérifier l'authentification avant toute action.",
   },
   {
     id: "A04",
     name: "Insecure Design",
+    severity: "high",
     constraint: "Valider le type MIME réel du fichier.",
   },
 ];
@@ -74,6 +76,22 @@ describe("buildPrompt() — GPT format (SC-005)", () => {
     const { gpt } = buildPrompt("test", mockRules);
     expect(gpt).toContain("- [A01");
     expect(gpt).toContain("- [A04");
+  });
+});
+
+describe("buildPrompt() — severity ordering", () => {
+  it("places critical rules before high before medium in Claude output", () => {
+    const rules: OWASPRule[] = [
+      { id: "A09", name: "Logging", severity: "medium", constraint: "Log failures." },
+      { id: "A04", name: "Insecure Design", severity: "high", constraint: "Validate files." },
+      { id: "A01", name: "Access Control", severity: "critical", constraint: "Check auth." },
+    ];
+    const { claude } = buildPrompt("test", rules);
+    const a01Pos = claude.indexOf("A01");
+    const a04Pos = claude.indexOf("A04");
+    const a09Pos = claude.indexOf("A09");
+    expect(a01Pos).toBeLessThan(a04Pos);
+    expect(a04Pos).toBeLessThan(a09Pos);
   });
 });
 

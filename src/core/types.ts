@@ -1,4 +1,16 @@
-export type OWASPRuleId = "A01" | "A02" | "A03" | "A04" | "A05" | "A07" | "A09";
+export type OWASPRuleId =
+  | "A01"
+  | "A02"
+  | "A03"
+  | "A04"
+  | "A05"
+  | "A06"
+  | "A07"
+  | "A08"
+  | "A09"
+  | "A10";
+
+export type Severity = "critical" | "high" | "medium";
 
 export type DomainKey =
   | "api"
@@ -12,6 +24,7 @@ export interface OWASPRule {
   id: OWASPRuleId;
   name: string;
   constraint: string;
+  severity: Severity;
 }
 
 export interface Detection {
