@@ -241,11 +241,14 @@ export function SingleBox() {
     <main className="min-h-screen flex flex-col items-center px-4 py-12">
       <div className="w-full max-w-2xl flex flex-col gap-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-accent">
-            he<span className="text-white">llm</span>et
-          </h1>
+          <div className="flex items-baseline gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-accent">
+              he<span className="text-white">llm</span>et
+            </h1>
+            <span className="text-xs font-mono text-muted tracking-widest  italic">—secure the prompt—</span>
+          </div>
           <p className="mt-1 text-sm text-muted">
-            Prompt sécurisé en un clic — contraintes OWASP injectées automatiquement.
+            Add a security context before asking AI.
           </p>
         </div>
 
