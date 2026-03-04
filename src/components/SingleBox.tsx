@@ -231,9 +231,7 @@ export function SingleBox() {
     <main className="min-h-screen flex flex-col items-center px-4 py-12">
       <div className="w-full max-w-2xl flex flex-col gap-6">
         <h1 className="text-2xl font-bold tracking-tight text-accent">
-          he
-          <span className="text-white">llm</span>
-          et
+          he<span className="text-white">llm</span>et
         </h1>
 
         <div className="flex flex-col gap-2">
@@ -266,7 +264,7 @@ export function SingleBox() {
             onClick={() =>
               dispatch({ type: "SET_LANG", lang: state.lang === "fr" ? "en" : "fr" })
             }
-            className="relative flex items-center w-[4.5rem] h-8 rounded-full border border-muted bg-surface cursor-pointer select-none shrink-0 focus-visible:ring-1 focus-visible:ring-accent"
+            className="relative flex items-center w-18 h-8 rounded-full border border-muted bg-surface cursor-pointer select-none shrink-0 focus-visible:ring-1 focus-visible:ring-accent"
           >
             {/* sliding thumb */}
             <span
@@ -308,7 +306,7 @@ export function SingleBox() {
           <button
             onClick={() => dispatch({ type: "CLEAR" })}
             disabled={!state.intention && !state.output}
-            className="px-4 py-2.5 rounded-md border border-red-500/60 text-red-400 font-mono text-sm hover:bg-red-500/10 hover:border-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-red-500/60"
+            className="px-4 py-2.5 rounded-md border border-red-500/60 text-red-400 font-mono text-sm hover:bg-red-500/10 hover:border-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-red-500/60"
             aria-label="Effacer tout"
           >
             ✕ Clear
@@ -322,9 +320,6 @@ export function SingleBox() {
             aria-label="Générer le prompt sécurisé (Entrée)"
           >
             → Run
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-bg/30 bg-bg/20 px-1.5 py-0.5 text-[10px] font-sans opacity-80">
-              ↵
-            </kbd>
           </button>
         </div>
 
