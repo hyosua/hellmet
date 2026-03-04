@@ -83,9 +83,9 @@ description: "Task list for Hellmet — Secure Prompt Box"
 
 **Independent Test**: Generate a prompt → click "Copy for Claude" → paste into text editor → verify `<task>`, `<security_constraints>`, `<instructions>` tags present. Click "Copy for GPT" → verify `### Tâche` sections present.
 
-- [ ] T023 [P] [US3] Add copy buttons to `src/components/OutputPanel.tsx` — add `[Copy for Claude]` and `[Copy for GPT]` buttons; detect `navigator.clipboard` availability on mount; if unavailable: buttons disabled with `title` tooltip "Clipboard non disponible dans ce contexte"; on click: call `navigator.clipboard.writeText(output.claude)` or `output.gpt`
-- [ ] T024 [US3] Add copy success feedback to `src/components/OutputPanel.tsx` — track `copiedTarget: "claude"|"gpt"|null` state; after successful write: set `copiedTarget`, reset to `null` after 2000ms; button label changes to "Copié !" while active; add `aria-live="polite"` region announcing copy confirmation for screen readers
-- [ ] T025 [US3] Write component test `tests/component/OutputPanel.test.tsx` — mock `navigator.clipboard.writeText`; verify: clicking "Copy for Claude" writes `output.claude` to clipboard; clicking "Copy for GPT" writes `output.gpt`; "Copié !" feedback appears after copy; buttons disabled when clipboard unavailable
+- [x] T023 [P] [US3] Add copy buttons to `src/components/OutputPanel.tsx` — add `[Copy for Claude]` and `[Copy for GPT]` buttons; detect `navigator.clipboard` availability on mount; if unavailable: buttons disabled with `title` tooltip "Clipboard non disponible dans ce contexte"; on click: call `navigator.clipboard.writeText(output.claude)` or `output.gpt`
+- [x] T024 [US3] Add copy success feedback to `src/components/OutputPanel.tsx` — track `copiedTarget: "claude"|"gpt"|null` state; after successful write: set `copiedTarget`, reset to `null` after 2000ms; button label changes to "Copié !" while active; add `aria-live="polite"` region announcing copy confirmation for screen readers
+- [x] T025 [US3] Write component test `tests/component/OutputPanel.test.tsx` — mock `navigator.clipboard.writeText`; verify: clicking "Copy for Claude" writes `output.claude` to clipboard; clicking "Copy for GPT" writes `output.gpt`; "Copié !" feedback appears after copy; buttons disabled when clipboard unavailable
 
 **Checkpoint**: All 3 user stories independently functional. Full acceptance scenario walkthrough passes.
 
