@@ -35,14 +35,14 @@ description: "Task list for Hellmet — Secure Prompt Box"
 
 **⚠️ CRITICAL**: No user story implementation can begin until this phase is complete.
 
-- [ ] T008 Create `src/data/rules.json` — OWASP 2025 rules array with 7 entries (A01, A02, A03, A04, A05, A07, A09), each with fields: `id`, `name`, `constraint` (specific actionable text per constitution Principle III)
-- [ ] T009 [P] Implement `src/core/owasp-map.ts` — export const `DOMAIN_MAP: Record<DomainKey, OWASPRuleId[]>` mapping all 6 domains (api, auth, upload, database, frontend, crypto) to their OWASP rule IDs per data-model.md
-- [ ] T010 [P] Implement `src/core/constraints.ts` — export function `getConstraint(id: OWASPRuleId): string` that looks up constraint text from `rules.json`; export `getRules(): OWASPRule[]` for UI consumption
-- [ ] T011 [P] Implement `src/core/detector.ts` — export function `detect(text: string): Detection` using keyword matching for 11 languages (Python, JavaScript, TypeScript, Node.js, SQL, Go, Rust, PHP, Java, C#, Bash) and 6 domains; returns `{ language: string|null, domain: DomainKey|null, matchedKeywords: string[] }`
-- [ ] T012 Write unit tests `tests/unit/detector.test.ts` — cover all 6 domain detection cases from spec.md (including multi-domain union case), null detection case, and at least 4 language detection cases
-- [ ] T013 [P] Write unit tests `tests/unit/owasp-map.test.ts` — verify each domain maps to the correct rule IDs per data-model.md mapping table
-- [ ] T014 Implement `src/core/prompt-builder.ts` — export function `buildPrompt(intention: string, rules: OWASPRule[]): PromptOutput` returning `{ claude: string, gpt: string }`; Claude format MUST use `<task>`, `<security_constraints>`, `<instructions>` tags; GPT format MUST use `### Tâche`, `### Contraintes de sécurité obligatoires`, `### Instructions` sections
-- [ ] T015 Write unit tests `tests/unit/prompt-builder.test.ts` — verify Claude output contains required XML tags (SC-004), verify GPT output contains required Markdown sections (SC-005), verify empty rules case produces prompt with no-constraints notice
+- [x] T008 Create `src/data/rules.json` — OWASP 2025 rules array with 7 entries (A01, A02, A03, A04, A05, A07, A09), each with fields: `id`, `name`, `constraint` (specific actionable text per constitution Principle III)
+- [x] T009 [P] Implement `src/core/owasp-map.ts` — export const `DOMAIN_MAP: Record<DomainKey, OWASPRuleId[]>` mapping all 6 domains (api, auth, upload, database, frontend, crypto) to their OWASP rule IDs per data-model.md
+- [x] T010 [P] Implement `src/core/constraints.ts` — export function `getConstraint(id: OWASPRuleId): string` that looks up constraint text from `rules.json`; export `getRules(): OWASPRule[]` for UI consumption
+- [x] T011 [P] Implement `src/core/detector.ts` — export function `detect(text: string): Detection` using keyword matching for 11 languages (Python, JavaScript, TypeScript, Node.js, SQL, Go, Rust, PHP, Java, C#, Bash) and 6 domains; returns `{ language: string|null, domain: DomainKey|null, matchedKeywords: string[] }`
+- [x] T012 Write unit tests `tests/unit/detector.test.ts` — cover all 6 domain detection cases from spec.md (including multi-domain union case), null detection case, and at least 4 language detection cases
+- [x] T013 [P] Write unit tests `tests/unit/owasp-map.test.ts` — verify each domain maps to the correct rule IDs per data-model.md mapping table
+- [x] T014 Implement `src/core/prompt-builder.ts` — export function `buildPrompt(intention: string, rules: OWASPRule[]): PromptOutput` returning `{ claude: string, gpt: string }`; Claude format MUST use `<task>`, `<security_constraints>`, `<instructions>` tags; GPT format MUST use `### Tâche`, `### Contraintes de sécurité obligatoires`, `### Instructions` sections
+- [x] T015 Write unit tests `tests/unit/prompt-builder.test.ts` — verify Claude output contains required XML tags (SC-004), verify GPT output contains required Markdown sections (SC-005), verify empty rules case produces prompt with no-constraints notice
 
 **Checkpoint**: `npm test` passes all 3 unit test suites. Core engine works independently.
 

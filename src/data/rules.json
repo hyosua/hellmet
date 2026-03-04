@@ -1,0 +1,37 @@
+[
+  {
+    "id": "A01",
+    "name": "Access Control",
+    "constraint": "Vérifier l'authentification et les autorisations avant toute action. Appliquer le principe du moindre privilège sur toutes les ressources."
+  },
+  {
+    "id": "A02",
+    "name": "Crypto Failures",
+    "constraint": "Ne jamais stocker de mots de passe en clair. Utiliser bcrypt (cost ≥ 12) ou Argon2. Chiffrer les données sensibles au repos avec AES-256."
+  },
+  {
+    "id": "A03",
+    "name": "Injection",
+    "constraint": "Utiliser exclusivement des requêtes paramétrées ou un ORM. Aucune concaténation de chaînes pour construire des requêtes SQL, commandes shell ou expressions LDAP."
+  },
+  {
+    "id": "A04",
+    "name": "Insecure Design",
+    "constraint": "Valider le type MIME réel du fichier (pas seulement l'extension). Limiter la taille des fichiers à 5 Mo. Renommer les fichiers uploadés avec un UUID pour éviter le Path Traversal."
+  },
+  {
+    "id": "A05",
+    "name": "Security Misconfiguration",
+    "constraint": "Supprimer les configurations par défaut et les endpoints non utilisés. Désactiver le détail des erreurs en production. Appliquer des en-têtes de sécurité HTTP (CSP, HSTS, X-Frame-Options)."
+  },
+  {
+    "id": "A07",
+    "name": "Auth Failures",
+    "constraint": "Implémenter un rate limiting sur toutes les routes d'authentification. Utiliser des tokens JWT avec une expiration courte (≤ 15 min). Invalider les sessions côté serveur à la déconnexion."
+  },
+  {
+    "id": "A09",
+    "name": "Logging Failures",
+    "constraint": "Logger toutes les tentatives d'accès échouées avec horodatage et IP. Ne jamais exposer de données sensibles (mots de passe, tokens) dans les logs. Conserver les logs d'audit en lieu sûr."
+  }
+]
