@@ -5,12 +5,9 @@ import React from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { OutputPanel } from "@/components/OutputPanel";
-import type { Detection, PromptOutput } from "@/core/types";
+import type { Detection } from "@/core/types";
 
-const mockOutput: PromptOutput = {
-  claude: "<task>Test intention</task>",
-  gpt: "### Tâche\nTest intention",
-};
+const mockOutput = "<task>Test intention</task>";
 
 const mockDetection: Detection = {
   language: "Node.js",
@@ -39,35 +36,12 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-describe("OutputPanel — format switcher", () => {
-  it("shows Claude XML tab active by default", () => {
-    render(<OutputPanel {...defaultProps} />);
-    const tab = screen.getByRole("tab", { name: /Claude XML/i });
-    expect(tab).toHaveAttribute("aria-selected", "true");
-  });
-
-  it("switches to GPT Markdown tab on click", () => {
-    render(<OutputPanel {...defaultProps} />);
-    fireEvent.click(screen.getByRole("tab", { name: /GPT Markdown/i }));
-    expect(screen.getByRole("tab", { name: /GPT Markdown/i })).toHaveAttribute("aria-selected", "true");
-  });
-});
-
 describe("OutputPanel — copy button", () => {
-  it("copies output.claude when Claude tab is active", async () => {
+  it("copies output when clicking Copy", async () => {
     render(<OutputPanel {...defaultProps} />);
-    fireEvent.click(screen.getByRole("button", { name: /Copy for Claude/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Copy/i }));
     await waitFor(() => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockOutput.claude);
-    });
-  });
-
-  it("copies output.gpt when GPT tab is active", async () => {
-    render(<OutputPanel {...defaultProps} />);
-    fireEvent.click(screen.getByRole("tab", { name: /GPT Markdown/i }));
-    fireEvent.click(screen.getByRole("button", { name: /Copy for GPT/i }));
-    await waitFor(() => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockOutput.gpt);
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockOutput);
     });
   });
 
@@ -75,7 +49,7 @@ describe("OutputPanel — copy button", () => {
     jest.useFakeTimers();
     render(<OutputPanel {...defaultProps} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Copy for Claude/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Copy/i }));
 
     await waitFor(() => {
       expect(screen.getByRole("button", { name: /Copié/i })).toBeInTheDocument();
@@ -84,7 +58,7 @@ describe("OutputPanel — copy button", () => {
     act(() => jest.advanceTimersByTime(2000));
 
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Copy for Claude/i })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Copy/i })).toBeInTheDocument();
     });
   });
 
@@ -96,7 +70,7 @@ describe("OutputPanel — copy button", () => {
     });
 
     render(<OutputPanel {...defaultProps} />);
-    expect(screen.getByRole("button", { name: /Copy for Claude/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Copy/i })).toBeDisabled();
   });
 });
 

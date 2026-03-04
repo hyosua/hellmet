@@ -22,16 +22,14 @@ export function OutputPanel({
   intention,
 }: OutputPanelProps) {
   const [clipboardAvailable, setClipboardAvailable] = useState(false);
-  const [copiedTarget, setCopiedTarget] = useState<"claude" | "gpt" | null>(null);
-  const [enhancedOutput, setEnhancedOutput] = useState<PromptOutput | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [enhancedOutput, setEnhancedOutput] = useState<string | null>(null);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [enhanceError, setEnhanceError] = useState(false);
-  const [activeFormat, setActiveFormat] = useState<"claude" | "gpt">("claude");
 
   useEffect(() => {
     setEnhancedOutput(null);
     setEnhanceError(false);
-    setActiveFormat("claude");
   }, [output]);
 
   useEffect(() => {
@@ -40,18 +38,13 @@ export function OutputPanel({
     );
   }, []);
 
-  const displayOutput = enhancedOutput ?? output;
-  const displayText = displayOutput
-    ? activeFormat === "claude"
-      ? displayOutput.claude
-      : displayOutput.gpt
-    : "";
+  const displayText = enhancedOutput ?? output ?? "";
 
   const handleCopy = async () => {
-    if (!displayOutput) return;
+    if (!displayText) return;
     await navigator.clipboard.writeText(displayText);
-    setCopiedTarget(activeFormat);
-    setTimeout(() => setCopiedTarget(null), 2000);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleEnhance = async () => {
@@ -65,12 +58,12 @@ export function OutputPanel({
         body: JSON.stringify({
           intention,
           rules: Array.from(activeRules),
-          basePrompt: output.claude,
+          basePrompt: output,
         }),
       });
       if (!res.ok) throw new Error("enhance failed");
       const { text } = (await res.json()) as { text: string };
-      setEnhancedOutput({ claude: text, gpt: text });
+      setEnhancedOutput(text);
     } catch {
       setEnhanceError(true);
       setTimeout(() => setEnhanceError(false), 3000);
@@ -94,48 +87,13 @@ export function OutputPanel({
     <div className="flex flex-col gap-3">
       {isLoading ? (
         <div className="animate-pulse rounded-md bg-surface h-48" />
-      ) : displayOutput ? (
+      ) : displayText ? (
         <>
-          {/* Format switcher tabs */}
-          <div className="flex gap-1" role="tablist" aria-label="Format du prompt">
-            <button
-              role="tab"
-              id="tab-claude"
-              aria-selected={activeFormat === "claude"}
-              aria-controls="panel-prompt"
-              onClick={() => setActiveFormat("claude")}
-              className={`px-3 py-1.5 rounded text-xs font-mono transition-colors ${
-                activeFormat === "claude"
-                  ? "bg-accent text-bg font-semibold"
-                  : "text-muted hover:text-text"
-              }`}
-            >
-              Claude XML
-            </button>
-            <button
-              role="tab"
-              id="tab-gpt"
-              aria-selected={activeFormat === "gpt"}
-              aria-controls="panel-prompt"
-              onClick={() => setActiveFormat("gpt")}
-              className={`px-3 py-1.5 rounded text-xs font-mono transition-colors ${
-                activeFormat === "gpt"
-                  ? "bg-accent text-bg font-semibold"
-                  : "text-muted hover:text-text"
-              }`}
-            >
-              GPT Markdown
-            </button>
-          </div>
-
           <textarea
-            id="panel-prompt"
-            role="tabpanel"
-            aria-labelledby={activeFormat === "claude" ? "tab-claude" : "tab-gpt"}
             readOnly
             value={displayText}
             className="w-full h-64 rounded-md bg-surface text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent"
-            aria-label={`Prompt sécurisé — format ${activeFormat === "claude" ? "Claude XML" : "GPT Markdown"}`}
+            aria-label="Prompt sécurisé"
           />
 
           <div className="flex gap-2 flex-wrap items-center">
@@ -144,12 +102,12 @@ export function OutputPanel({
               disabled={!clipboardAvailable}
               title={!clipboardAvailable ? "Clipboard non disponible dans ce contexte" : undefined}
               className={`px-3 py-1.5 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
-                copiedTarget
+                copied
                   ? "border-accent bg-accent text-bg font-semibold"
                   : "border-muted text-text hover:border-accent hover:text-accent"
               }`}
             >
-              {copiedTarget ? "Copié !" : `Copy for ${activeFormat === "claude" ? "Claude" : "GPT"}`}
+              {copied ? "Copié !" : "Copy"}
             </button>
             <button
               onClick={handleEnhance}
@@ -172,7 +130,7 @@ export function OutputPanel({
           )}
 
           <div aria-live="polite" aria-atomic="true" className="sr-only">
-            {copiedTarget && `Prompt ${copiedTarget === "claude" ? "Claude" : "GPT"} copié dans le presse-papiers`}
+            {copied && "Prompt copié dans le presse-papiers"}
           </div>
         </>
       ) : (
@@ -193,7 +151,6 @@ export function OutputPanel({
               {rulesLine}
             </p>
           </div>
-          {/* T043 — coverage score badge */}
           <span
             className={`shrink-0 px-2 py-0.5 rounded text-xs font-mono border ${
               activeRules.size === 0

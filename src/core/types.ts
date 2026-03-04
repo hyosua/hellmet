@@ -34,10 +34,7 @@ export interface Detection {
   matchedKeywords: string[];
 }
 
-export interface PromptOutput {
-  claude: string;
-  gpt: string;
-}
+export type PromptOutput = string;
 
 export interface AppState {
   intention: string;

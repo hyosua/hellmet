@@ -7,112 +7,77 @@ const mockRules: OWASPRule[] = [
     name: "Access Control",
     severity: "critical",
     constraint: "Vérifier l'authentification avant toute action.",
+    constraint_en: "Check authentication before any action.",
   },
   {
     id: "A04",
     name: "Insecure Design",
     severity: "high",
     constraint: "Valider le type MIME réel du fichier.",
+    constraint_en: "Validate the real MIME type of the file.",
   },
 ];
 
-describe("buildPrompt() — Claude format (SC-004)", () => {
+describe("buildPrompt() — XML format", () => {
   it("contains <task> tag", () => {
-    const { claude } = buildPrompt("Crée une route Node.js", mockRules);
-    expect(claude).toContain("<task>");
-    expect(claude).toContain("</task>");
+    const result = buildPrompt("Crée une route Node.js", mockRules);
+    expect(result).toContain("<task>");
+    expect(result).toContain("</task>");
   });
 
   it("contains <security_constraints> tag", () => {
-    const { claude } = buildPrompt("Crée une route Node.js", mockRules);
-    expect(claude).toContain("<security_constraints>");
-    expect(claude).toContain("</security_constraints>");
+    const result = buildPrompt("Crée une route Node.js", mockRules);
+    expect(result).toContain("<security_constraints>");
+    expect(result).toContain("</security_constraints>");
   });
 
   it("contains <instructions> tag", () => {
-    const { claude } = buildPrompt("Crée une route Node.js", mockRules);
-    expect(claude).toContain("<instructions>");
-    expect(claude).toContain("</instructions>");
+    const result = buildPrompt("Crée une route Node.js", mockRules);
+    expect(result).toContain("<instructions>");
+    expect(result).toContain("</instructions>");
   });
 
   it("embeds the intention inside <task>", () => {
     const intention = "Crée une route Node.js pour l'upload";
-    const { claude } = buildPrompt(intention, mockRules);
-    expect(claude).toContain(intention);
+    const result = buildPrompt(intention, mockRules);
+    expect(result).toContain(intention);
   });
 
   it("includes all rule constraints inside <security_constraints>", () => {
-    const { claude } = buildPrompt("test", mockRules);
-    expect(claude).toContain("A01");
-    expect(claude).toContain("A04");
-    expect(claude).toContain("Vérifier l'authentification avant toute action.");
-    expect(claude).toContain("Valider le type MIME réel du fichier.");
-  });
-});
-
-describe("buildPrompt() — GPT format (SC-005)", () => {
-  it("contains ### Tâche section", () => {
-    const { gpt } = buildPrompt("Crée une route Node.js", mockRules);
-    expect(gpt).toContain("### Tâche");
-  });
-
-  it("contains ### Contraintes de sécurité obligatoires section", () => {
-    const { gpt } = buildPrompt("Crée une route Node.js", mockRules);
-    expect(gpt).toContain("### Contraintes de sécurité obligatoires");
-  });
-
-  it("contains instruction text at the end", () => {
-    const { gpt } = buildPrompt("Crée une route Node.js", mockRules);
-    expect(gpt).toContain("Tu es en mode audit strict");
-  });
-
-  it("embeds the intention in the Tâche section", () => {
-    const intention = "Crée une route Node.js pour l'upload";
-    const { gpt } = buildPrompt(intention, mockRules);
-    expect(gpt).toContain(intention);
-  });
-
-  it("lists constraints as bullet points", () => {
-    const { gpt } = buildPrompt("test", mockRules);
-    expect(gpt).toContain("- [A01");
-    expect(gpt).toContain("- [A04");
+    const result = buildPrompt("test", mockRules);
+    expect(result).toContain("A01");
+    expect(result).toContain("A04");
+    expect(result).toContain("Vérifier l'authentification avant toute action.");
+    expect(result).toContain("Valider le type MIME réel du fichier.");
   });
 });
 
 describe("buildPrompt() — severity ordering", () => {
-  it("places critical rules before high before medium in Claude output", () => {
+  it("places critical rules before high before medium", () => {
     const rules: OWASPRule[] = [
-      { id: "A09", name: "Logging", severity: "medium", constraint: "Log failures." },
-      { id: "A04", name: "Insecure Design", severity: "high", constraint: "Validate files." },
-      { id: "A01", name: "Access Control", severity: "critical", constraint: "Check auth." },
+      { id: "A09", name: "Logging", severity: "medium", constraint: "Log failures.", constraint_en: "Log failures." },
+      { id: "A04", name: "Insecure Design", severity: "high", constraint: "Validate files.", constraint_en: "Validate files." },
+      { id: "A01", name: "Access Control", severity: "critical", constraint: "Check auth.", constraint_en: "Check auth." },
     ];
-    const { claude } = buildPrompt("test", rules);
-    const a01Pos = claude.indexOf("A01");
-    const a04Pos = claude.indexOf("A04");
-    const a09Pos = claude.indexOf("A09");
+    const result = buildPrompt("test", rules);
+    const a01Pos = result.indexOf("A01");
+    const a04Pos = result.indexOf("A04");
+    const a09Pos = result.indexOf("A09");
     expect(a01Pos).toBeLessThan(a04Pos);
     expect(a04Pos).toBeLessThan(a09Pos);
   });
 });
 
 describe("buildPrompt() — empty rules case", () => {
-  it("shows a no-constraints notice in Claude format", () => {
-    const { claude } = buildPrompt("test intention", []);
-    expect(claude).toContain("<security_constraints>");
-    expect(claude).toContain("Aucune contrainte de sécurité spécifique");
-  });
-
-  it("shows a no-constraints notice in GPT format", () => {
-    const { gpt } = buildPrompt("test intention", []);
-    expect(gpt).toContain("### Contraintes de sécurité obligatoires");
-    expect(gpt).toContain("Aucune contrainte de sécurité spécifique");
+  it("shows a no-constraints notice", () => {
+    const result = buildPrompt("test intention", []);
+    expect(result).toContain("<security_constraints>");
+    expect(result).toContain("Aucune contrainte de sécurité spécifique");
   });
 
   it("still has all required structural sections even with no rules", () => {
-    const { claude, gpt } = buildPrompt("test", []);
-    expect(claude).toContain("<task>");
-    expect(claude).toContain("<instructions>");
-    expect(gpt).toContain("### Tâche");
-    expect(gpt).toContain("Tu es en mode audit strict");
+    const result = buildPrompt("test", []);
+    expect(result).toContain("<task>");
+    expect(result).toContain("<instructions>");
   });
 });
