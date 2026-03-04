@@ -2,7 +2,7 @@
 
 **A secure prompt builder for developers working with LLMs.**
 
-Hellmet takes a plain-language coding intention and transforms it into a structured, security-hardened prompt, automatically injecting the relevant OWASP Top 10 constraints for the detected technical domain.
+hellmet takes a plain-language coding intention and transforms it into a structured, security-hardened prompt, automatically injecting the relevant OWASP Top 10 constraints for the detected technical domain.
 
 ---
 
@@ -14,7 +14,6 @@ Hellmet takes a plain-language coding intention and transforms it into a structu
 - [Features](#features)
 - [Installation](#installation)
 - [Running tests](#running-tests)
-- [Project structure](#project-structure)
 - [En français](#en-français)
 
 ---
@@ -152,34 +151,6 @@ The test suite covers all core modules (`detector`, `prompt-builder`, `owasp-map
 ```bash
 npm run test:watch   # watch mode
 ```
-
----
-
-## Project structure
-
-```
-src/
-  app/
-    api/enhance/route.ts   # Groq enrichment endpoint
-    layout.tsx
-    page.tsx
-  components/
-    SingleBox.tsx          # Root component — state, history, orchestration
-    OutputPanel.tsx        # Format tabs, copy, AI enrichment, coverage badge
-    Toggles.tsx            # OWASP rule toggle buttons
-  core/
-    detector.ts            # Language and domain detection
-    prompt-builder.ts      # Claude XML and GPT Markdown formatters
-    owasp-map.ts           # Domain → OWASP rule mapping
-    constraints.ts         # Rule registry
-    types.ts               # Shared TypeScript types
-  data/
-    rules.json             # OWASP Top 10 rules with severity
-tests/
-  unit/                    # Core module tests
-  component/               # React component tests (jsdom)
-```
-
 ---
 
 ## En français
