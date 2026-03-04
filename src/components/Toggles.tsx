@@ -1,6 +1,7 @@
 "use client";
 
 import type { OWASPRuleId } from "@/core/types";
+import { getRules } from "@/core/constraints";
 
 interface TogglesProps {
   activeToggles: Set<OWASPRuleId>;
@@ -20,12 +21,15 @@ const TOGGLE_RULES: { id: OWASPRuleId; label: string }[] = [
   { id: "A10", label: "A10 SSRF" },
 ];
 
+const constraintMap = new Map(getRules().map((r) => [r.id, r.constraint]));
+
 export function Toggles({ activeToggles, autoDetected, onChange }: TogglesProps) {
   return (
     <div className="flex flex-wrap gap-2" role="group" aria-label="Règles OWASP">
       {TOGGLE_RULES.map(({ id, label }) => {
         const isAuto = autoDetected.has(id);
         const isManual = activeToggles.has(id);
+        const constraint = constraintMap.get(id);
 
         const state: "auto" | "manual" | "inactive" = isAuto
           ? "auto"
@@ -41,18 +45,30 @@ export function Toggles({ activeToggles, autoDetected, onChange }: TogglesProps)
             : "border-[--color-muted] text-[--color-muted] bg-transparent hover:border-[--color-text] hover:text-[--color-text]";
 
         return (
-          <button
-            key={id}
-            role="button"
-            aria-pressed={isAuto || isManual}
-            aria-label={`${label}${isAuto ? " (détecté automatiquement)" : ""}`}
-            disabled={isAuto}
-            onClick={() => !isAuto && onChange(id, !isManual)}
-            className={`px-2.5 py-1 rounded border text-xs font-mono transition-colors ${stateClass}`}
-            data-state={state}
-          >
-            {label}
-          </button>
+          <div key={id} className="relative group">
+            <button
+              role="button"
+              aria-pressed={isAuto || isManual}
+              aria-label={`${label}${isAuto ? " (détecté automatiquement)" : ""}`}
+              aria-describedby={`tooltip-${id}`}
+              disabled={isAuto}
+              onClick={() => !isAuto && onChange(id, !isManual)}
+              className={`px-2.5 py-1 rounded border text-xs font-mono transition-colors ${stateClass}`}
+              data-state={state}
+              title={constraint}
+            >
+              {label}
+            </button>
+            {constraint && (
+              <span
+                id={`tooltip-${id}`}
+                role="tooltip"
+                className="pointer-events-none absolute bottom-full left-0 mb-1.5 hidden group-hover:block group-focus-within:block w-64 rounded-md border border-[--color-muted] bg-[--color-surface] p-2 text-xs text-[--color-text] z-10 shadow-lg"
+              >
+                {constraint}
+              </span>
+            )}
+          </div>
         );
       })}
     </div>

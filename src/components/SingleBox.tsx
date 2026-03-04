@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useCallback } from "react";
+import { useReducer, useCallback, useState, useEffect } from "react";
 import type { AppState, Detection, OWASPRuleId, PromptOutput } from "@/core/types";
 import { detect } from "@/core/detector";
 import { getRulesForDomains } from "@/core/owasp-map";
@@ -8,6 +8,36 @@ import { getRulesByIds } from "@/core/constraints";
 import { buildPrompt } from "@/core/prompt-builder";
 import { OutputPanel } from "./OutputPanel";
 import { Toggles } from "./Toggles";
+
+// ---------------------------------------------------------------------------
+// History
+// ---------------------------------------------------------------------------
+
+interface HistoryEntry {
+  intention: string;
+  output: PromptOutput;
+  detection: Detection;
+  autoRuleIds: OWASPRuleId[];
+  timestamp: number;
+}
+
+const HISTORY_KEY = "hellmet_history";
+const MAX_HISTORY = 5;
+
+function loadHistory(): HistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? (JSON.parse(raw) as HistoryEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(entries: HistoryEntry[]): void {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
+  } catch {}
+}
 
 // ---------------------------------------------------------------------------
 // State & Reducer
@@ -104,6 +134,34 @@ function reducer(state: ExtendedState, action: Action): ExtendedState {
 
 export function SingleBox() {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  // Load history from localStorage on mount
+  useEffect(() => {
+    setHistory(loadHistory());
+  }, []);
+
+  // Persist history when a new result is generated
+  useEffect(() => {
+    if (!state.output || !state.detection || !state.intention.trim()) return;
+    const entry: HistoryEntry = {
+      intention: state.intention,
+      output: state.output,
+      detection: state.detection,
+      autoRuleIds: state.autoRuleIds,
+      timestamp: Date.now(),
+    };
+    setHistory((prev) => {
+      const next = [
+        entry,
+        ...prev.filter((e) => e.intention !== state.intention),
+      ].slice(0, MAX_HISTORY);
+      saveHistory(next);
+      return next;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.output]);
 
   const handleSubmit = useCallback(() => {
     if (!state.intention.trim()) {
@@ -134,6 +192,17 @@ export function SingleBox() {
 
   const handleToggle = useCallback((id: OWASPRuleId, active: boolean) => {
     dispatch({ type: "TOGGLE_RULE", id, active });
+  }, []);
+
+  const handleRestoreHistory = useCallback((entry: HistoryEntry) => {
+    dispatch({ type: "SET_INTENTION", payload: entry.intention });
+    dispatch({
+      type: "SET_RESULT",
+      detection: entry.detection,
+      output: entry.output,
+      autoRuleIds: entry.autoRuleIds,
+    });
+    setHistoryOpen(false);
   }, []);
 
   const autoDetected = new Set(state.autoRuleIds);
@@ -189,7 +258,38 @@ export function SingleBox() {
               ✕ Clear
             </button>
           )}
+          {history.length > 0 && (
+            <button
+              onClick={() => setHistoryOpen((o) => !o)}
+              className="px-4 py-2 rounded-md border border-[--color-muted] text-[--color-muted] font-mono text-sm hover:border-[--color-text] hover:text-[--color-text] transition-colors ml-auto"
+              aria-expanded={historyOpen}
+            >
+              {historyOpen ? "✕" : "⏱"} Historique ({history.length})
+            </button>
+          )}
         </div>
+
+        {/* History panel */}
+        {historyOpen && history.length > 0 && (
+          <div className="flex flex-col gap-1 rounded-md border border-[--color-muted] bg-[--color-surface] p-2">
+            {history.map((entry) => (
+              <button
+                key={entry.timestamp}
+                onClick={() => handleRestoreHistory(entry)}
+                className="text-left px-3 py-2 rounded text-xs font-mono text-[--color-muted] hover:bg-[--color-bg] hover:text-[--color-text] transition-colors truncate"
+                title={entry.intention}
+              >
+                <span className="text-[--color-accent]">
+                  {new Date(entry.timestamp).toLocaleTimeString("fr-FR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>{" "}
+                {entry.intention}
+              </button>
+            ))}
+          </div>
+        )}
 
         <Toggles
           activeToggles={manualToggles}

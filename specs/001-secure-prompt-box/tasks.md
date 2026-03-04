@@ -121,10 +121,10 @@ description: "Task list for Hellmet — Secure Prompt Box"
 
 ### 7C — UI Improvements
 
-- [ ] T040 [P] Add Claude ↔ GPT format switcher to `src/components/OutputPanel.tsx` — replace single textarea with tab/toggle switcher (`Claude XML` | `GPT Markdown`); textarea shows `output.claude` or `output.gpt` based on active tab; copy button copies the currently displayed format
-- [ ] T041 [P] Add constraint tooltip to `src/components/Toggles.tsx` — on hover/focus, show a `<span role="tooltip">` with the rule's constraint text (fetch from `getRules()`); use CSS `title` attribute as fallback
-- [ ] T042 [P] Add session history to `src/components/SingleBox.tsx` — persist last 5 intentions + outputs in `localStorage` under key `hellmet_history`; add a collapsible history panel below the output; clicking an entry restores intention and output without re-running detection
-- [ ] T043 [P] Add security coverage score to `src/components/OutputPanel.tsx` — display `{activeRules.size} / 7 règles actives` as a visual badge next to the detection metadata
+- [x] T040 [P] Add Claude ↔ GPT format switcher to `src/components/OutputPanel.tsx` — replace single textarea with tab/toggle switcher (`Claude XML` | `GPT Markdown`); textarea shows `output.claude` or `output.gpt` based on active tab; copy button copies the currently displayed format
+- [x] T041 [P] Add constraint tooltip to `src/components/Toggles.tsx` — on hover/focus, show a `<span role="tooltip">` with the rule's constraint text (fetch from `getRules()`); use CSS `title` attribute as fallback
+- [x] T042 [P] Add session history to `src/components/SingleBox.tsx` — persist last 5 intentions + outputs in `localStorage` under key `hellmet_history`; add a collapsible history panel below the output; clicking an entry restores intention and output without re-running detection
+- [x] T043 [P] Add security coverage score to `src/components/OutputPanel.tsx` — display `{activeRules.size} / 7 règles actives` as a visual badge next to the detection metadata
 
 ### 7D — Prompt Quality
 

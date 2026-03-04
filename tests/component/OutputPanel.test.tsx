@@ -22,7 +22,7 @@ const defaultProps = {
   output: mockOutput,
   isLoading: false,
   detection: mockDetection,
-  activeRules: new Set<"A01" | "A02" | "A03" | "A04" | "A05" | "A07" | "A09">(["A01"]),
+  activeRules: new Set<"A01" | "A02" | "A03" | "A04" | "A05" | "A06" | "A07" | "A08" | "A09" | "A10">(["A01"]),
   intention: "Crée une route api en Node",
 };
 
@@ -39,8 +39,22 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-describe("OutputPanel — copy buttons", () => {
-  it("clicking 'Copy for Claude' writes output.claude to clipboard", async () => {
+describe("OutputPanel — format switcher", () => {
+  it("shows Claude XML tab active by default", () => {
+    render(<OutputPanel {...defaultProps} />);
+    const tab = screen.getByRole("tab", { name: /Claude XML/i });
+    expect(tab).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("switches to GPT Markdown tab on click", () => {
+    render(<OutputPanel {...defaultProps} />);
+    fireEvent.click(screen.getByRole("tab", { name: /GPT Markdown/i }));
+    expect(screen.getByRole("tab", { name: /GPT Markdown/i })).toHaveAttribute("aria-selected", "true");
+  });
+});
+
+describe("OutputPanel — copy button", () => {
+  it("copies output.claude when Claude tab is active", async () => {
     render(<OutputPanel {...defaultProps} />);
     fireEvent.click(screen.getByRole("button", { name: /Copy for Claude/i }));
     await waitFor(() => {
@@ -48,15 +62,16 @@ describe("OutputPanel — copy buttons", () => {
     });
   });
 
-  it("clicking 'Copy for GPT' writes output.gpt to clipboard", async () => {
+  it("copies output.gpt when GPT tab is active", async () => {
     render(<OutputPanel {...defaultProps} />);
+    fireEvent.click(screen.getByRole("tab", { name: /GPT Markdown/i }));
     fireEvent.click(screen.getByRole("button", { name: /Copy for GPT/i }));
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockOutput.gpt);
     });
   });
 
-  it("shows 'Copié !' feedback after copying for Claude", async () => {
+  it("shows 'Copié !' feedback after copy then reverts", async () => {
     jest.useFakeTimers();
     render(<OutputPanel {...defaultProps} />);
 
@@ -73,18 +88,7 @@ describe("OutputPanel — copy buttons", () => {
     });
   });
 
-  it("shows 'Copié !' feedback after copying for GPT", async () => {
-    jest.useFakeTimers();
-    render(<OutputPanel {...defaultProps} />);
-
-    fireEvent.click(screen.getByRole("button", { name: /Copy for GPT/i }));
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /Copié/i })).toBeInTheDocument();
-    });
-  });
-
-  it("disables copy buttons when clipboard is unavailable", () => {
+  it("disables copy button when clipboard is unavailable", () => {
     Object.defineProperty(navigator, "clipboard", {
       value: undefined,
       writable: true,
@@ -92,9 +96,7 @@ describe("OutputPanel — copy buttons", () => {
     });
 
     render(<OutputPanel {...defaultProps} />);
-
     expect(screen.getByRole("button", { name: /Copy for Claude/i })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Copy for GPT/i })).toBeDisabled();
   });
 });
 
@@ -115,5 +117,11 @@ describe("OutputPanel — rendering states", () => {
     render(<OutputPanel {...defaultProps} />);
     expect(screen.getByText(/Node\.js · api/)).toBeInTheDocument();
     expect(screen.getByText(/A01/)).toBeInTheDocument();
+  });
+
+  it("shows coverage score badge", () => {
+    render(<OutputPanel {...defaultProps} />);
+    expect(screen.getByTitle("Couverture OWASP")).toBeInTheDocument();
+    expect(screen.getByTitle("Couverture OWASP")).toHaveTextContent("1/10 règles");
   });
 });
