@@ -8,18 +8,50 @@ function sortBySeverity(rules: OWASPRule[]): OWASPRule[] {
   );
 }
 
-const NO_CONSTRAINTS_NOTICE =
-  "Aucune contrainte de sécurité spécifique n'a été détectée. " +
-  "Active les règles OWASP manuellement si nécessaire.";
+type Lang = "fr" | "en";
+
+const LABELS: Record<Lang, {
+  noConstraints: string;
+  claudeInstructions: string;
+  gptTask: string;
+  gptConstraints: string;
+  gptInstructions: string;
+}> = {
+  fr: {
+    noConstraints:
+      "Aucune contrainte de sécurité spécifique n'a été détectée. " +
+      "Active les règles OWASP manuellement si nécessaire.",
+    claudeInstructions:
+      "Réponds uniquement avec du code sécurisé respectant toutes les contraintes ci-dessus.\n" +
+      "Indique explicitement chaque contrainte respectée dans un commentaire en tête de fichier.",
+    gptTask: "### Tâche",
+    gptConstraints: "### Contraintes de sécurité obligatoires",
+    gptInstructions:
+      "Tu es en mode audit strict. Chaque ligne de code doit respecter les contraintes ci-dessus.",
+  },
+  en: {
+    noConstraints:
+      "No specific security constraints were detected. " +
+      "Enable OWASP rules manually if needed.",
+    claudeInstructions:
+      "Reply only with secure code that satisfies all the constraints above.\n" +
+      "Explicitly acknowledge each constraint in a comment at the top of the file.",
+    gptTask: "### Task",
+    gptConstraints: "### Mandatory Security Constraints",
+    gptInstructions:
+      "You are in strict audit mode. Every line of code must comply with the constraints above.",
+  },
+};
 
 /**
  * Builds a Claude XML-formatted security-hardened prompt.
  */
-function buildClaudeFormat(intention: string, rules: OWASPRule[]): string {
+function buildClaudeFormat(intention: string, rules: OWASPRule[], lang: Lang): string {
+  const L = LABELS[lang];
   const constraints =
     rules.length > 0
       ? rules.map((r) => `[${r.id} — ${r.name}] ${r.constraint}`).join("\n")
-      : NO_CONSTRAINTS_NOTICE;
+      : L.noConstraints;
 
   return `<task>
 ${intention.trim()}
@@ -30,30 +62,29 @@ ${constraints}
 </security_constraints>
 
 <instructions>
-Réponds uniquement avec du code sécurisé respectant toutes les contraintes ci-dessus.
-Indique explicitement chaque contrainte respectée dans un commentaire en tête de fichier.
+${L.claudeInstructions}
 </instructions>`;
 }
 
 /**
  * Builds a GPT/Cursor Markdown-formatted security-hardened prompt.
  */
-function buildGptFormat(intention: string, rules: OWASPRule[]): string {
+function buildGptFormat(intention: string, rules: OWASPRule[], lang: Lang): string {
+  const L = LABELS[lang];
   const constraints =
     rules.length > 0
       ? rules
           .map((r) => `- [${r.id} — ${r.name}] ${r.constraint}`)
           .join("\n")
-      : `- ${NO_CONSTRAINTS_NOTICE}`;
+      : `- ${L.noConstraints}`;
 
-  return `### Tâche
+  return `${L.gptTask}
 ${intention.trim()}
 
-### Contraintes de sécurité obligatoires
+${L.gptConstraints}
 ${constraints}
 
-### Instructions
-Tu es en mode audit strict. Chaque ligne de code doit respecter les contraintes ci-dessus.`;
+${L.gptInstructions}`;
 }
 
 /**
@@ -61,15 +92,17 @@ Tu es en mode audit strict. Chaque ligne de code doit respecter les contraintes 
  *
  * @param intention - The raw user coding intention
  * @param rules     - The active OWASP rules to inject
+ * @param lang      - Output language: "fr" (default) or "en"
  * @returns PromptOutput with `claude` (XML) and `gpt` (Markdown) variants
  */
 export function buildPrompt(
   intention: string,
-  rules: OWASPRule[]
+  rules: OWASPRule[],
+  lang: Lang = "fr"
 ): PromptOutput {
   const sorted = sortBySeverity(rules);
   return {
-    claude: buildClaudeFormat(intention, sorted),
-    gpt: buildGptFormat(intention, sorted),
+    claude: buildClaudeFormat(intention, sorted, lang),
+    gpt: buildGptFormat(intention, sorted, lang),
   };
 }

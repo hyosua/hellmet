@@ -55,6 +55,29 @@ const DOMAIN_KEYWORDS: Record<DomainKey, string[]> = {
 };
 
 // ---------------------------------------------------------------------------
+// Keyword weights (high-signal terms score more than 1)
+// ---------------------------------------------------------------------------
+
+const KEYWORD_WEIGHTS: Record<string, number> = {
+  jwt: 3,
+  bcrypt: 3,
+  oauth: 2,
+  password: 2,
+  "mot de passe": 2,
+  upload: 2,
+  s3: 2,
+  "sql injection": 3,
+  "form-data": 2,
+  multipart: 2,
+  encryption: 2,
+  encrypt: 2,
+  decrypt: 2,
+  hmac: 2,
+  prisma: 2,
+  mongoose: 2,
+};
+
+// ---------------------------------------------------------------------------
 // Detection logic
 // ---------------------------------------------------------------------------
 
@@ -92,7 +115,7 @@ export function detect(text: string): Detection {
     let score = 0;
     for (const kw of keywords) {
       if (lower.includes(kw.toLowerCase())) {
-        score++;
+        score += KEYWORD_WEIGHTS[kw.toLowerCase()] ?? 1;
         if (!matched.includes(kw)) matched.push(kw);
       }
     }

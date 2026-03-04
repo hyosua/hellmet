@@ -61,9 +61,9 @@ describe("buildPrompt() — GPT format (SC-005)", () => {
     expect(gpt).toContain("### Contraintes de sécurité obligatoires");
   });
 
-  it("contains ### Instructions section", () => {
+  it("contains instruction text at the end", () => {
     const { gpt } = buildPrompt("Crée une route Node.js", mockRules);
-    expect(gpt).toContain("### Instructions");
+    expect(gpt).toContain("Tu es en mode audit strict");
   });
 
   it("embeds the intention in the Tâche section", () => {
@@ -113,6 +113,6 @@ describe("buildPrompt() — empty rules case", () => {
     expect(claude).toContain("<task>");
     expect(claude).toContain("<instructions>");
     expect(gpt).toContain("### Tâche");
-    expect(gpt).toContain("### Instructions");
+    expect(gpt).toContain("Tu es en mode audit strict");
   });
 });

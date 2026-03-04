@@ -47,7 +47,6 @@ export function Toggles({ activeToggles, autoDetected, onChange }: TogglesProps)
         return (
           <div key={id} className="relative group">
             <button
-              role="button"
               aria-pressed={isAuto || isManual}
               aria-label={`${label}${isAuto ? " (détecté automatiquement)" : ""}`}
               aria-describedby={`tooltip-${id}`}
@@ -59,15 +58,6 @@ export function Toggles({ activeToggles, autoDetected, onChange }: TogglesProps)
             >
               {label}
             </button>
-            {constraint && (
-              <span
-                id={`tooltip-${id}`}
-                role="tooltip"
-                className="pointer-events-none absolute bottom-full left-0 mb-1.5 hidden group-hover:block group-focus-within:block w-64 rounded-md border border-[--color-muted] bg-[--color-surface] p-2 text-xs text-[--color-text] z-10 shadow-lg"
-              >
-                {constraint}
-              </span>
-            )}
           </div>
         );
       })}

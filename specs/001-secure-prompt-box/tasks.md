@@ -128,8 +128,8 @@ description: "Task list for Hellmet — Secure Prompt Box"
 
 ### 7D — Prompt Quality
 
-- [ ] T044 [P] Add output language selector to `src/components/SingleBox.tsx` — `FR` / `EN` toggle stored in state; pass `lang` param to `buildPrompt()`; translate instruction and constraint sections accordingly in `prompt-builder.ts`
-- [ ] T045 [P] Add keyword weighting to `src/core/detector.ts` — define a `KEYWORD_WEIGHTS` map for high-signal terms (e.g., `jwt` → 3, `bcrypt` → 3, `sql injection` → 3); multiply score by weight during domain detection
+- [x] T044 [P] Add output language selector to `src/components/SingleBox.tsx` — `FR` / `EN` toggle stored in state; pass `lang` param to `buildPrompt()`; translate instruction and constraint sections accordingly in `prompt-builder.ts`
+- [x] T045 [P] Add keyword weighting to `src/core/detector.ts` — define a `KEYWORD_WEIGHTS` map for high-signal terms (e.g., `jwt` → 3, `bcrypt` → 3, `sql injection` → 3); multiply score by weight during domain detection
 
 ---
 

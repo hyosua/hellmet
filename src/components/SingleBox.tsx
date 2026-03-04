@@ -56,9 +56,12 @@ const INITIAL_TOGGLES: Record<OWASPRuleId, boolean> = {
   A10: false,
 };
 
+type Lang = "fr" | "en";
+
 type ExtendedState = AppState & {
   error: string | null;
   autoRuleIds: OWASPRuleId[];
+  lang: Lang;
 };
 
 const initialState: ExtendedState = {
@@ -69,6 +72,7 @@ const initialState: ExtendedState = {
   isLoading: false,
   error: null,
   autoRuleIds: [],
+  lang: "fr",
 };
 
 type Action =
@@ -82,6 +86,7 @@ type Action =
     }
   | { type: "SET_ERROR"; message: string }
   | { type: "TOGGLE_RULE"; id: OWASPRuleId; active: boolean }
+  | { type: "SET_LANG"; lang: Lang }
   | { type: "CLEAR" };
 
 function effectiveRuleIds(
@@ -120,8 +125,17 @@ function reducer(state: ExtendedState, action: Action): ExtendedState {
       }
       const allIds = effectiveRuleIds(state.autoRuleIds, newToggles);
       const rules = getRulesByIds(allIds);
-      const output = buildPrompt(state.intention, rules);
+      const output = buildPrompt(state.intention, rules, state.lang);
       return { ...state, toggles: newToggles, output };
+    }
+    case "SET_LANG": {
+      if (!state.output || !state.intention.trim()) {
+        return { ...state, lang: action.lang };
+      }
+      const allIds = effectiveRuleIds(state.autoRuleIds, state.toggles);
+      const rules = getRulesByIds(allIds);
+      const output = buildPrompt(state.intention, rules, action.lang);
+      return { ...state, lang: action.lang, output };
     }
     default:
       return state;
@@ -175,7 +189,7 @@ export function SingleBox() {
     const autoRuleIds = getRulesForDomains(detection.domains);
     const allIds = effectiveRuleIds(autoRuleIds, state.toggles);
     const rules = getRulesByIds(allIds);
-    const output = buildPrompt(state.intention, rules);
+    const output = buildPrompt(state.intention, rules, state.lang);
 
     dispatch({ type: "SET_RESULT", detection, output, autoRuleIds });
   }, [state.intention, state.toggles]);
@@ -240,31 +254,73 @@ export function SingleBox() {
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {/* Run */}
           <button
             onClick={handleSubmit}
             disabled={state.isLoading}
-            className="px-4 py-2 rounded-md bg-[--color-accent] text-[--color-bg] font-mono font-semibold text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-            aria-label="Générer le prompt sécurisé"
+            className="flex items-center gap-2.5 px-5 py-2.5 rounded-md bg-[--color-accent] text-[--color-bg] font-mono font-semibold text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            aria-label="Générer le prompt sécurisé (Ctrl+Entrée)"
           >
             → Run
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-[--color-bg]/30 bg-[--color-bg]/20 px-1.5 py-0.5 text-[10px] font-sans opacity-80">
+              Ctrl+↵
+            </kbd>
           </button>
-          {(state.intention || state.output) && (
-            <button
-              onClick={() => dispatch({ type: "CLEAR" })}
-              className="px-4 py-2 rounded-md border border-[--color-muted] text-[--color-muted] font-mono text-sm hover:border-red-400 hover:text-red-400 transition-colors"
-              aria-label="Effacer tout"
+
+          {/* FR / EN toggle switch */}
+          <button
+            role="switch"
+            aria-checked={state.lang === "en"}
+            aria-label="Langue de sortie"
+            onClick={() =>
+              dispatch({ type: "SET_LANG", lang: state.lang === "fr" ? "en" : "fr" })
+            }
+            className="relative flex items-center w-[4.5rem] h-8 rounded-full border border-[--color-muted] bg-[--color-surface] cursor-pointer select-none shrink-0 focus-visible:ring-1 focus-visible:ring-[--color-accent]"
+          >
+            {/* sliding thumb */}
+            <span
+              aria-hidden="true"
+              className={`absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-full bg-[--color-accent] transition-all duration-200 ease-in-out ${
+                state.lang === "en" ? "left-[calc(50%+1px)]" : "left-0.5"
+              }`}
+            />
+            {/* labels */}
+            <span
+              className={`relative z-10 w-1/2 text-center text-[11px] font-mono uppercase font-semibold transition-colors duration-200 ${
+                state.lang === "fr" ? "text-[--color-bg]" : "text-[--color-muted]"
+              }`}
             >
-              ✕ Clear
-            </button>
-          )}
+              FR
+            </span>
+            <span
+              className={`relative z-10 w-1/2 text-center text-[11px] font-mono uppercase font-semibold transition-colors duration-200 ${
+                state.lang === "en" ? "text-[--color-bg]" : "text-[--color-muted]"
+              }`}
+            >
+              EN
+            </span>
+          </button>
+
+          {/* History */}
           {history.length > 0 && (
             <button
               onClick={() => setHistoryOpen((o) => !o)}
-              className="px-4 py-2 rounded-md border border-[--color-muted] text-[--color-muted] font-mono text-sm hover:border-[--color-text] hover:text-[--color-text] transition-colors ml-auto"
+              className="px-4 py-2.5 rounded-md border border-[--color-muted] text-[--color-muted] font-mono text-sm hover:border-[--color-text] hover:text-[--color-text] transition-colors"
               aria-expanded={historyOpen}
             >
               {historyOpen ? "✕" : "⏱"} Historique ({history.length})
+            </button>
+          )}
+
+          {/* Clear — right-aligned, red */}
+          {(state.intention || state.output) && (
+            <button
+              onClick={() => dispatch({ type: "CLEAR" })}
+              className="ml-auto px-4 py-2.5 rounded-md border border-red-500/60 text-red-400 font-mono text-sm hover:bg-red-500/10 hover:border-red-400 transition-colors"
+              aria-label="Effacer tout"
+            >
+              ✕ Clear
             </button>
           )}
         </div>
