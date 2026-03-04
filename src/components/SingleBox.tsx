@@ -7,6 +7,7 @@ import { getRulesForDomains } from "@/core/owasp-map";
 import { getRulesByIds } from "@/core/constraints";
 import { buildPrompt } from "@/core/prompt-builder";
 import { OutputPanel } from "./OutputPanel";
+import { Toggles } from "./Toggles";
 
 // ---------------------------------------------------------------------------
 // State & Reducer
@@ -24,7 +25,7 @@ const INITIAL_TOGGLES: Record<OWASPRuleId, boolean> = {
 
 type ExtendedState = AppState & {
   error: string | null;
-  activeRuleIds: OWASPRuleId[];
+  autoRuleIds: OWASPRuleId[];
 };
 
 const initialState: ExtendedState = {
@@ -34,7 +35,7 @@ const initialState: ExtendedState = {
   output: null,
   isLoading: false,
   error: null,
-  activeRuleIds: [],
+  autoRuleIds: [],
 };
 
 type Action =
@@ -44,9 +45,20 @@ type Action =
       type: "SET_RESULT";
       detection: Detection;
       output: PromptOutput;
-      ruleIds: OWASPRuleId[];
+      autoRuleIds: OWASPRuleId[];
     }
-  | { type: "SET_ERROR"; message: string };
+  | { type: "SET_ERROR"; message: string }
+  | { type: "TOGGLE_RULE"; id: OWASPRuleId; active: boolean };
+
+function effectiveRuleIds(
+  autoRuleIds: OWASPRuleId[],
+  toggles: Record<OWASPRuleId, boolean>
+): OWASPRuleId[] {
+  const manualIds = (Object.entries(toggles) as [OWASPRuleId, boolean][])
+    .filter(([, v]) => v)
+    .map(([k]) => k);
+  return [...new Set([...autoRuleIds, ...manualIds])];
+}
 
 function reducer(state: ExtendedState, action: Action): ExtendedState {
   switch (action.type) {
@@ -60,11 +72,21 @@ function reducer(state: ExtendedState, action: Action): ExtendedState {
         isLoading: false,
         detection: action.detection,
         output: action.output,
-        activeRuleIds: action.ruleIds,
+        autoRuleIds: action.autoRuleIds,
         error: null,
       };
     case "SET_ERROR":
       return { ...state, isLoading: false, error: action.message };
+    case "TOGGLE_RULE": {
+      const newToggles = { ...state.toggles, [action.id]: action.active };
+      if (!state.output || !state.intention.trim()) {
+        return { ...state, toggles: newToggles };
+      }
+      const allIds = effectiveRuleIds(state.autoRuleIds, newToggles);
+      const rules = getRulesByIds(allIds);
+      const output = buildPrompt(state.intention, rules);
+      return { ...state, toggles: newToggles, output };
+    }
     default:
       return state;
   }
@@ -87,12 +109,13 @@ export function SingleBox() {
 
     const detection = detect(state.intention);
     const domains = detection.domain ? [detection.domain] : [];
-    const ruleIds = getRulesForDomains(domains);
-    const rules = getRulesByIds(ruleIds);
+    const autoRuleIds = getRulesForDomains(domains);
+    const allIds = effectiveRuleIds(autoRuleIds, state.toggles);
+    const rules = getRulesByIds(allIds);
     const output = buildPrompt(state.intention, rules);
 
-    dispatch({ type: "SET_RESULT", detection, output, ruleIds });
-  }, [state.intention]);
+    dispatch({ type: "SET_RESULT", detection, output, autoRuleIds });
+  }, [state.intention, state.toggles]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -103,6 +126,18 @@ export function SingleBox() {
     },
     [handleSubmit]
   );
+
+  const handleToggle = useCallback((id: OWASPRuleId, active: boolean) => {
+    dispatch({ type: "TOGGLE_RULE", id, active });
+  }, []);
+
+  const autoDetected = new Set(state.autoRuleIds);
+  const manualToggles = new Set(
+    (Object.entries(state.toggles) as [OWASPRuleId, boolean][])
+      .filter(([, v]) => v)
+      .map(([k]) => k)
+  );
+  const activeRules = new Set(effectiveRuleIds(state.autoRuleIds, state.toggles));
 
   return (
     <main className="min-h-screen flex flex-col items-center px-4 py-12">
@@ -140,14 +175,17 @@ export function SingleBox() {
           → Run
         </button>
 
-        {/* Phase 4: <Toggles /> will be integrated here */}
-        <div />
+        <Toggles
+          activeToggles={manualToggles}
+          autoDetected={autoDetected}
+          onChange={handleToggle}
+        />
 
         <OutputPanel
           output={state.output}
           isLoading={state.isLoading}
           detection={state.detection}
-          activeRules={new Set(state.activeRuleIds)}
+          activeRules={activeRules}
         />
       </div>
     </main>
