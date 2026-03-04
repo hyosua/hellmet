@@ -39,10 +39,10 @@ export function Toggles({ activeToggles, autoDetected, onChange }: TogglesProps)
 
         const stateClass =
           state === "auto"
-            ? "border-[--color-accent] bg-[--color-accent]/20 text-[--color-accent] cursor-default"
+            ? "border-accent bg-accent/20 text-accent cursor-default"
             : state === "manual"
-            ? "border-[--color-accent] bg-[--color-accent] text-[--color-bg]"
-            : "border-[--color-muted] text-[--color-muted] bg-transparent hover:border-[--color-text] hover:text-[--color-text]";
+            ? "border-accent bg-accent text-bg"
+            : "border-muted text-muted bg-transparent hover:border-text hover:text-text";
 
         return (
           <div key={id} className="relative group">

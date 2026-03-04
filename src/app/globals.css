@@ -4,7 +4,7 @@
   --color-bg: oklch(0.08 0 0);
   --color-surface: oklch(0.13 0 0);
   --color-accent: oklch(0.72 0.17 145);
-  --color-muted: oklch(0.45 0 0);
+  --color-muted: oklch(0.65 0 0);
   --color-text: oklch(0.92 0 0);
   --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
 }
@@ -13,8 +13,6 @@
 *::before,
 *::after {
   box-sizing: border-box;
-  padding: 0;
-  margin: 0;
 }
 
 html,
