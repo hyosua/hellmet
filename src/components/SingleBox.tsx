@@ -86,6 +86,7 @@ type Action =
     }
   | { type: "SET_ERROR"; message: string }
   | { type: "TOGGLE_RULE"; id: OWASPRuleId; active: boolean }
+  | { type: "RESET_TOGGLES" }
   | { type: "SET_LANG"; lang: Lang }
   | { type: "CLEAR" };
 
@@ -127,6 +128,15 @@ function reducer(state: ExtendedState, action: Action): ExtendedState {
       const rules = getRulesByIds(allIds);
       const output = buildPrompt(state.intention, rules, state.lang);
       return { ...state, toggles: newToggles, output };
+    }
+    case "RESET_TOGGLES": {
+      if (!state.output || !state.intention.trim()) {
+        return { ...state, toggles: INITIAL_TOGGLES };
+      }
+      const allIds = effectiveRuleIds(state.autoRuleIds, INITIAL_TOGGLES);
+      const rules = getRulesByIds(allIds);
+      const output = buildPrompt(state.intention, rules, state.lang);
+      return { ...state, toggles: INITIAL_TOGGLES, output };
     }
     case "SET_LANG": {
       if (!state.output || !state.intention.trim()) {
@@ -179,7 +189,7 @@ export function SingleBox() {
 
   const handleSubmit = useCallback(() => {
     if (!state.intention.trim()) {
-      dispatch({ type: "SET_ERROR", message: "L'intention ne peut pas être vide." });
+      dispatch({ type: "SET_ERROR", message: "L'intention ne peut pas être vide. — Immanuel Hackant" });
       return;
     }
 
@@ -351,15 +361,25 @@ export function SingleBox() {
         )}
 
         <div className="flex flex-col gap-3 rounded-md border border-muted bg-surface p-4">
-          <p className="text-xs text-muted">
-            <span
-              className="text-text cursor-help"
-              title="OWASP Top 10 — liste des vulnérabilités web les plus critiques. Chaque règle correspond à une catégorie de risque (injection, auth, accès…)."
-            >
-              Règles OWASP
-            </span>{" "}
-            — détectées selon ton code, activables manuellement.
-          </p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-muted">
+              <span
+                className="text-text cursor-help"
+                title="OWASP Top 10 — liste des vulnérabilités web les plus critiques. Chaque règle correspond à une catégorie de risque (injection, auth, accès…)."
+              >
+                Règles OWASP
+              </span>{" "}
+              — détectées selon ton code, activables manuellement.
+            </p>
+            {manualToggles.size > 0 && (
+              <button
+                onClick={() => dispatch({ type: "RESET_TOGGLES" })}
+                className="shrink-0 text-xs font-mono text-muted hover:text-text transition-colors"
+              >
+                Tout désactiver
+              </button>
+            )}
+          </div>
           <Toggles
             activeToggles={manualToggles}
             autoDetected={autoDetected}
