@@ -3,60 +3,70 @@
     "id": "A01",
     "name": "Access Control",
     "severity": "critical",
-    "constraint": "Vérifier l'authentification et les autorisations avant toute action. Appliquer le principe du moindre privilège sur toutes les ressources."
+    "constraint": "Vérifier l'authentification et les autorisations avant toute action. Appliquer le principe du moindre privilège sur toutes les ressources.",
+    "constraint_en": "Verify authentication and authorization before any action. Apply the principle of least privilege on all resources."
   },
   {
     "id": "A02",
     "name": "Crypto Failures",
     "severity": "critical",
-    "constraint": "Ne jamais stocker de mots de passe en clair. Utiliser bcrypt (cost ≥ 12) ou Argon2. Chiffrer les données sensibles au repos avec AES-256."
+    "constraint": "Ne jamais stocker de mots de passe en clair. Utiliser bcrypt (cost ≥ 12) ou Argon2. Chiffrer les données sensibles au repos avec AES-256.",
+    "constraint_en": "Never store passwords in plain text. Use bcrypt (cost ≥ 12) or Argon2. Encrypt sensitive data at rest with AES-256."
   },
   {
     "id": "A03",
     "name": "Injection",
     "severity": "critical",
-    "constraint": "Utiliser exclusivement des requêtes paramétrées ou un ORM. Aucune concaténation de chaînes pour construire des requêtes SQL, commandes shell ou expressions LDAP."
+    "constraint": "Utiliser exclusivement des requêtes paramétrées ou un ORM. Aucune concaténation de chaînes pour construire des requêtes SQL, commandes shell ou expressions LDAP.",
+    "constraint_en": "Use exclusively parameterized queries or an ORM. No string concatenation to build SQL queries, shell commands, or LDAP expressions."
   },
   {
     "id": "A04",
     "name": "Insecure Design",
     "severity": "high",
-    "constraint": "Valider le type MIME réel du fichier (pas seulement l'extension). Limiter la taille des fichiers à 5 Mo. Renommer les fichiers uploadés avec un UUID pour éviter le Path Traversal."
+    "constraint": "Valider le type MIME réel du fichier (pas seulement l'extension). Limiter la taille des fichiers à 5 Mo. Renommer les fichiers uploadés avec un UUID pour éviter le Path Traversal.",
+    "constraint_en": "Validate the actual MIME type of the file (not just the extension). Limit file size to 5 MB. Rename uploaded files with a UUID to prevent Path Traversal."
   },
   {
     "id": "A05",
     "name": "Security Misconfiguration",
     "severity": "high",
-    "constraint": "Supprimer les configurations par défaut et les endpoints non utilisés. Désactiver le détail des erreurs en production. Appliquer des en-têtes de sécurité HTTP (CSP, HSTS, X-Frame-Options)."
+    "constraint": "Supprimer les configurations par défaut et les endpoints non utilisés. Désactiver le détail des erreurs en production. Appliquer des en-têtes de sécurité HTTP (CSP, HSTS, X-Frame-Options).",
+    "constraint_en": "Remove default configurations and unused endpoints. Disable detailed error messages in production. Apply HTTP security headers (CSP, HSTS, X-Frame-Options)."
   },
   {
     "id": "A06",
     "name": "Vulnerable Components",
     "severity": "high",
-    "constraint": "Inventorier toutes les dépendances et leurs versions. Utiliser uniquement des bibliothèques maintenues à jour. Intégrer une analyse SCA (ex. npm audit, Dependabot) dans le pipeline CI."
+    "constraint": "Inventorier toutes les dépendances et leurs versions. Utiliser uniquement des bibliothèques maintenues à jour. Intégrer une analyse SCA (ex. npm audit, Dependabot) dans le pipeline CI.",
+    "constraint_en": "Inventory all dependencies and their versions. Use only up-to-date maintained libraries. Integrate SCA analysis (e.g. npm audit, Dependabot) into the CI pipeline."
   },
   {
     "id": "A07",
     "name": "Auth Failures",
     "severity": "critical",
-    "constraint": "Implémenter un rate limiting sur toutes les routes d'authentification. Utiliser des tokens JWT avec une expiration courte (≤ 15 min). Invalider les sessions côté serveur à la déconnexion."
+    "constraint": "Implémenter un rate limiting sur toutes les routes d'authentification. Utiliser des tokens JWT avec une expiration courte (≤ 15 min). Invalider les sessions côté serveur à la déconnexion.",
+    "constraint_en": "Implement rate limiting on all authentication routes. Use JWT tokens with a short expiration (≤ 15 min). Invalidate sessions server-side on logout."
   },
   {
     "id": "A08",
     "name": "Integrity Failures",
     "severity": "high",
-    "constraint": "Vérifier l'intégrité des fichiers et des données reçus (hash SHA-256 ou signature). Ne jamais désérialiser des données non fiables sans validation stricte du schéma. Signer les artefacts du pipeline CI/CD."
+    "constraint": "Vérifier l'intégrité des fichiers et des données reçus (hash SHA-256 ou signature). Ne jamais désérialiser des données non fiables sans validation stricte du schéma. Signer les artefacts du pipeline CI/CD.",
+    "constraint_en": "Verify the integrity of received files and data (SHA-256 hash or signature). Never deserialize untrusted data without strict schema validation. Sign CI/CD pipeline artifacts."
   },
   {
     "id": "A09",
     "name": "Logging Failures",
     "severity": "medium",
-    "constraint": "Logger toutes les tentatives d'accès échouées avec horodatage et IP. Ne jamais exposer de données sensibles (mots de passe, tokens) dans les logs. Conserver les logs d'audit en lieu sûr."
+    "constraint": "Logger toutes les tentatives d'accès échouées avec horodatage et IP. Ne jamais exposer de données sensibles (mots de passe, tokens) dans les logs. Conserver les logs d'audit en lieu sûr.",
+    "constraint_en": "Log all failed access attempts with timestamp and IP. Never expose sensitive data (passwords, tokens) in logs. Store audit logs in a secure location."
   },
   {
     "id": "A10",
     "name": "SSRF",
     "severity": "high",
-    "constraint": "Valider et filtrer toutes les URL fournies par l'utilisateur avant toute requête sortante. Utiliser une allowlist stricte des hôtes et protocoles autorisés. Bloquer les requêtes vers les adresses internes (169.254.x.x, 10.x.x.x, localhost)."
+    "constraint": "Valider et filtrer toutes les URL fournies par l'utilisateur avant toute requête sortante. Utiliser une allowlist stricte des hôtes et protocoles autorisés. Bloquer les requêtes vers les adresses internes (169.254.x.x, 10.x.x.x, localhost).",
+    "constraint_en": "Validate and filter all user-supplied URLs before any outbound request. Use a strict allowlist of allowed hosts and protocols. Block requests to internal addresses (169.254.x.x, 10.x.x.x, localhost)."
   }
 ]

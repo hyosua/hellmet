@@ -50,7 +50,7 @@ function buildClaudeFormat(intention: string, rules: OWASPRule[], lang: Lang): s
   const L = LABELS[lang];
   const constraints =
     rules.length > 0
-      ? rules.map((r) => `[${r.id} — ${r.name}] ${r.constraint}`).join("\n")
+      ? rules.map((r) => `[${r.id} — ${r.name}] ${lang === "en" ? r.constraint_en : r.constraint}`).join("\n")
       : L.noConstraints;
 
   return `<task>
@@ -74,7 +74,7 @@ function buildGptFormat(intention: string, rules: OWASPRule[], lang: Lang): stri
   const constraints =
     rules.length > 0
       ? rules
-          .map((r) => `- [${r.id} — ${r.name}] ${r.constraint}`)
+          .map((r) => `- [${r.id} — ${r.name}] ${lang === "en" ? r.constraint_en : r.constraint}`)
           .join("\n")
       : `- ${L.noConstraints}`;
 

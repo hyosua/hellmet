@@ -24,6 +24,7 @@ export interface OWASPRule {
   id: OWASPRuleId;
   name: string;
   constraint: string;
+  constraint_en: string;
   severity: Severity;
 }
 
