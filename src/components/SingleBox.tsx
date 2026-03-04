@@ -298,6 +298,7 @@ export function SingleBox() {
               onClick={() => setHistoryOpen((o) => !o)}
               className="px-4 py-2.5 rounded-md border border-muted text-muted font-mono text-sm hover:border-text hover:text-text transition-colors"
               aria-expanded={historyOpen}
+              aria-controls="history-panel"
             >
               {historyOpen ? "✕" : "⏱"} Historique ({history.length})
             </button>
@@ -329,7 +330,7 @@ export function SingleBox() {
 
         {/* History panel */}
         {historyOpen && history.length > 0 && (
-          <div className="flex flex-col gap-1 rounded-md border border-muted bg-surface p-2">
+          <div id="history-panel" className="flex flex-col gap-1 rounded-md border border-muted bg-surface p-2">
             {history.map((entry) => (
               <button
                 key={entry.timestamp}

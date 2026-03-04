@@ -49,7 +49,7 @@ export function Toggles({ activeToggles, autoDetected, onChange }: TogglesProps)
             <button
               aria-pressed={isAuto || isManual}
               aria-label={`${label}${isAuto ? " (détecté automatiquement)" : ""}`}
-              aria-describedby={`tooltip-${id}`}
+              aria-describedby={constraint ? `tooltip-${id}` : undefined}
               disabled={isAuto}
               onClick={() => !isAuto && onChange(id, !isManual)}
               className={`px-2.5 py-1 rounded border text-xs font-mono transition-colors ${stateClass}`}
@@ -58,6 +58,11 @@ export function Toggles({ activeToggles, autoDetected, onChange }: TogglesProps)
             >
               {label}
             </button>
+            {constraint && (
+              <span id={`tooltip-${id}`} className="sr-only">
+                {constraint}
+              </span>
+            )}
           </div>
         );
       })}

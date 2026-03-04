@@ -100,7 +100,9 @@ export function OutputPanel({
           <div className="flex gap-1" role="tablist" aria-label="Format du prompt">
             <button
               role="tab"
+              id="tab-claude"
               aria-selected={activeFormat === "claude"}
+              aria-controls="panel-prompt"
               onClick={() => setActiveFormat("claude")}
               className={`px-3 py-1.5 rounded text-xs font-mono transition-colors ${
                 activeFormat === "claude"
@@ -112,7 +114,9 @@ export function OutputPanel({
             </button>
             <button
               role="tab"
+              id="tab-gpt"
               aria-selected={activeFormat === "gpt"}
+              aria-controls="panel-prompt"
               onClick={() => setActiveFormat("gpt")}
               className={`px-3 py-1.5 rounded text-xs font-mono transition-colors ${
                 activeFormat === "gpt"
@@ -125,6 +129,9 @@ export function OutputPanel({
           </div>
 
           <textarea
+            id="panel-prompt"
+            role="tabpanel"
+            aria-labelledby={activeFormat === "claude" ? "tab-claude" : "tab-gpt"}
             readOnly
             value={displayText}
             className="w-full h-64 rounded-md bg-surface text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent"
@@ -195,6 +202,7 @@ export function OutputPanel({
                 : "border-yellow-500 text-yellow-500"
             }`}
             title="Couverture OWASP"
+            aria-label={`Couverture OWASP : ${activeRules.size} sur ${TOTAL_RULES} règles actives`}
           >
             {activeRules.size}/{TOTAL_RULES} règles
           </span>
