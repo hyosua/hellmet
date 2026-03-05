@@ -16,7 +16,7 @@ import { ThemeToggle } from "./ThemeToggle";
 
 const UI = {
   fr: {
-    subtitle: "Ajoutez un contexte de sécurité avant de demander à une IA.",
+    subtitle: "Ajoutez un contexte de sécurité à vos prompts llm.",
     placeholder: "Ex : route API Node.js pour uploader des images avec JWT",
     ariaTextarea: "Intention de code",
     errorEmpty: "L'intention ne peut pas être vide. — Immanuel Hackant",
