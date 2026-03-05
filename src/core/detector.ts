@@ -26,12 +26,16 @@ const DOMAIN_KEYWORDS: Record<DomainKey, string[]> = {
   api: [
     "route", "endpoint", "rest", "api", "controller", "handler",
     "request", "response", "middleware", "http", "get /", "post /",
-    "put /", "delete /", "patch /",
+    "put /", "delete /", "patch /", "graphql", "resolver", "gql","openapi", "swagger",
+    "fetch(", "axios", "httpclient", "restify", "fastify", "hapi", "express", "spring", "django rest", "flask rest", "webapi",
+    
   ],
   auth: [
     "login", "logout", "authentification", "authentication", "auth",
     "jwt", "session", "token", "password", "oauth", "signup",
-    "register", "credential", "mot de passe",
+    "register", "credential", "mot de passe", "hash", "bcrypt", "scrypt", "argon2",
+    "passport", "devise", "warden", "identity", "claims", "refresh token",
+    "authorization",
   ],
   upload: [
     "upload", "fichier", "file", "image", "multipart", "form-data",
@@ -40,17 +44,21 @@ const DOMAIN_KEYWORDS: Record<DomainKey, string[]> = {
   database: [
     "sql", "database", "db", "query", "select", "insert", "update",
     "delete", "orm", "prisma", "sequelize", "mongoose", "mongodb",
-    "postgres", "mysql", "sqlite", "migration", "schema", "table",
+    "postgres", "mysql", "sqlite", "migration", "schema", "table", "bdd", "base de données",
+    
   ],
   frontend: [
     "composant", "component", "form", "input", "ui", "render",
     "react", "vue", "angular", "html", "css", "dom", "button",
-    "formulaire", "interface",
+    "formulaire", "interface","vuejs", "svelte", "tailwind", "bootstrap", "material-ui",
+    "frontend", "client-side", "navigateur", "browser", "css", "html", "jsx", "tsx",
   ],
   crypto: [
     "chiffr", "hash", "encrypt", "decrypt", "bcrypt", "aes",
     "rsa", "sha", "hmac", "signature", "clé", "key", "secret",
-    "cryptograph",
+    "cryptograph", "cryptographie", "crypto", "openssl", "libsodium", "sodium", "crypto-js",
+    "argon2", "scrypt", "pbkdf2", "hkdf", "key derivation","key exchange", "diffie-hellman",
+    
   ],
 };
 
@@ -82,15 +90,12 @@ const KEYWORD_WEIGHTS: Record<string, number> = {
 // ---------------------------------------------------------------------------
 
 /**
- * Detects the programming language and technical domain from free text.
- * Returns a Detection object with the best-matched language, domain (or null),
- * and the keywords that triggered the matches.
+ * Detects the best-matched programming language and collects matched keywords.
  */
-export function detect(text: string): Detection {
-  const lower = text.toLowerCase();
-  const matched: string[] = [];
-
-  // --- Language detection: pick the language with the most keyword hits ---
+function detectLanguage(
+  lower: string,
+  matched: string[]
+): { language: string | null; score: number } {
   let bestLanguage: string | null = null;
   let bestLangScore = 0;
 
@@ -108,7 +113,13 @@ export function detect(text: string): Detection {
     }
   }
 
-  // --- Domain detection: collect all domains with at least 1 keyword hit ---
+  return { language: bestLanguage, score: bestLangScore };
+}
+
+/**
+ * Detects domains with at least 1 keyword hit and collects matched keywords.
+ */
+function detectDomains(lower: string, matched: string[]): DomainKey[] {
   const matchedDomains: DomainKey[] = [];
 
   for (const [domain, keywords] of Object.entries(DOMAIN_KEYWORDS) as [DomainKey, string[]][]) {
@@ -124,9 +135,24 @@ export function detect(text: string): Detection {
     }
   }
 
+  return matchedDomains;
+}
+
+/**
+ * Detects the programming language and technical domain from free text.
+ * Returns a Detection object with the best-matched language, domain (or null),
+ * and the keywords that triggered the matches.
+ */
+export function detect(text: string): Detection {
+  const lower = text.toLowerCase();
+  const matched: string[] = [];
+
+  const { language, score: langScore } = detectLanguage(lower, matched);
+  const domains = detectDomains(lower, matched);
+
   return {
-    language: bestLangScore > 0 ? bestLanguage : null,
-    domains: matchedDomains,
+    language: langScore > 0 ? language : null,
+    domains,
     matchedKeywords: [...new Set(matched)],
   };
 }

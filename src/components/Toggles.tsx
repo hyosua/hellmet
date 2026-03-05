@@ -6,10 +6,10 @@ import { getRules } from "@/core/constraints";
 type Lang = "fr" | "en";
 
 interface TogglesProps {
-  activeToggles: Set<OWASPRuleId>;
-  autoDetected: Set<OWASPRuleId>;
-  onChange: (id: OWASPRuleId, active: boolean) => void;
-  lang?: Lang;
+  readonly activeToggles: Set<OWASPRuleId>;
+  readonly autoDetected: Set<OWASPRuleId>;
+  readonly onChange: (id: OWASPRuleId, active: boolean) => void;
+  readonly lang?: Lang;
 }
 
 const TOGGLE_RULES: { id: OWASPRuleId; label_fr: string; label_en: string }[] = [

@@ -108,9 +108,9 @@ function useEnhance(output: PromptOutput | null, intention: string, activeRules:
 const TOTAL_RULES = getRules().length;
 
 interface DetectionInfoProps {
-  detection: Detection | null;
-  activeRules: Set<OWASPRuleId>;
-  labels: (typeof UI)[Lang];
+  readonly detection: Detection | null;
+  readonly activeRules: Set<OWASPRuleId>;
+  readonly labels: (typeof UI)[Lang];
 }
 
 function badgeClass(size: number): string {
@@ -170,7 +170,14 @@ export function OutputPanel({
 
   const displayText = enhancedOutput ?? output ?? "";
 
-  const enhanceLabel = isEnhancing ? labels.enhancing : enhancedOutput ? labels.enhanced : labels.enhance;
+  let enhanceLabel: string;
+  if (isEnhancing) {
+    enhanceLabel = labels.enhancing;
+  } else if (enhancedOutput) {
+    enhanceLabel = labels.enhanced;
+  } else {
+    enhanceLabel = labels.enhance;
+  }
   const copyButtonClass = copied
     ? "border-accent bg-accent text-bg font-semibold"
     : "border-muted bg-surface text-muted hover:border-accent hover:text-accent";
@@ -202,7 +209,7 @@ export function OutputPanel({
         <button
           onClick={() => copy(displayText)}
           disabled={!clipboardAvailable}
-          title={!clipboardAvailable ? labels.clipboardUnavailable : undefined}
+          title={clipboardAvailable ? undefined : labels.clipboardUnavailable}
           className={`absolute top-4 right-6 px-2 py-1 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${copyButtonClass}`}
         >
           {copied ? labels.copied : labels.copy}

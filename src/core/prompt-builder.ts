@@ -16,16 +16,14 @@ const LABELS: Record<Lang, { noConstraints: string; instructions: string }> = {
       "Aucune contrainte de sécurité spécifique n'a été détectée. " +
       "Active les règles OWASP manuellement si nécessaire.",
     instructions:
-      "Réponds uniquement avec du code sécurisé respectant toutes les contraintes ci-dessus.\n" +
-      "Indique explicitement chaque contrainte respectée dans un commentaire en tête de fichier.",
+      "Réponds uniquement avec du code sécurisé respectant toutes les contraintes ci-dessus.\n"
   },
   en: {
     noConstraints:
       "No specific security constraints were detected. " +
       "Enable OWASP rules manually if needed.",
     instructions:
-      "Reply only with secure code that satisfies all the constraints above.\n" +
-      "Explicitly acknowledge each constraint in a comment at the top of the file.",
+      "Reply only with secure code that satisfies all the constraints above.\n"
   },
 };
 
