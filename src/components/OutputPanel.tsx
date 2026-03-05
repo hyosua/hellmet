@@ -45,16 +45,116 @@ const UI = {
   },
 } as const;
 
-interface OutputPanelProps {
-  output: PromptOutput | null;
-  isLoading: boolean;
-  detection: Detection | null;
-  activeRules: Set<OWASPRuleId>;
-  intention: string;
-  lang?: Lang;
+// ---------------------------------------------------------------------------
+// Hooks
+// ---------------------------------------------------------------------------
+
+function useClipboard() {
+  const [available, setAvailable] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setAvailable(typeof navigator !== "undefined" && !!navigator.clipboard?.writeText);
+  }, []);
+
+  const copy = async (text: string) => {
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return { available, copied, copy };
 }
 
+function useEnhance(output: PromptOutput | null, intention: string, activeRules: Set<OWASPRuleId>) {
+  const [enhancedOutput, setEnhancedOutput] = useState<string | null>(null);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setEnhancedOutput(null);
+    setHasError(false);
+  }, [output]);
+
+  const enhance = async () => {
+    if (!output) return;
+    setIsEnhancing(true);
+    setHasError(false);
+    try {
+      const res = await fetch("/api/enhance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ intention, rules: Array.from(activeRules), basePrompt: output }),
+      });
+      if (!res.ok) throw new Error("enhance failed");
+      const { text } = (await res.json()) as { text: string };
+      setEnhancedOutput(text);
+    } catch {
+      setHasError(true);
+      setTimeout(() => setHasError(false), 3000);
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  return { enhancedOutput, isEnhancing, hasError, enhance };
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
 const TOTAL_RULES = getRules().length;
+
+interface DetectionInfoProps {
+  detection: Detection | null;
+  activeRules: Set<OWASPRuleId>;
+  labels: (typeof UI)[Lang];
+}
+
+function badgeClass(size: number): string {
+  if (size === 0) return "border-muted text-muted";
+  if (size >= TOTAL_RULES / 2) return "border-accent text-accent";
+  return "border-yellow-500 text-yellow-500";
+}
+
+function DetectionInfo({ detection, activeRules, labels }: DetectionInfoProps) {
+  if (detection === null && activeRules.size === 0) return null;
+
+  const language = detection?.language ?? null;
+  const domains = detection?.domains ?? [];
+  const detectionLine =
+    language || domains.length > 0
+      ? [language, ...domains].filter(Boolean).join(" · ")
+      : labels.noDetection;
+
+  return (
+    <div className="flex items-center gap-3 text-xs text-muted">
+      <span
+        className={`shrink-0 px-2 py-0.5 rounded font-mono border ${badgeClass(activeRules.size)}`}
+        title={labels.owaspCoverage}
+        aria-label={labels.owaspAriaLabel(activeRules.size, TOTAL_RULES)}
+      >
+        {labels.rules(activeRules.size, TOTAL_RULES)}
+      </span>
+      <span>{detectionLine}</span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+interface OutputPanelProps {
+  readonly output: PromptOutput | null;
+  readonly isLoading: boolean;
+  readonly detection: Detection | null;
+  readonly activeRules: Set<OWASPRuleId>;
+  readonly intention: string;
+  readonly lang?: Lang;
+}
 
 export function OutputPanel({
   output,
@@ -64,142 +164,72 @@ export function OutputPanel({
   intention,
   lang = "fr",
 }: OutputPanelProps) {
-  const L = UI[lang];
-  const [clipboardAvailable, setClipboardAvailable] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [enhancedOutput, setEnhancedOutput] = useState<string | null>(null);
-  const [isEnhancing, setIsEnhancing] = useState(false);
-  const [enhanceError, setEnhanceError] = useState(false);
-
-  useEffect(() => {
-    setEnhancedOutput(null);
-    setEnhanceError(false);
-  }, [output]);
-
-  useEffect(() => {
-    setClipboardAvailable(
-      typeof navigator !== "undefined" && !!navigator.clipboard?.writeText
-    );
-  }, []);
+  const labels = UI[lang];
+  const { available: clipboardAvailable, copied, copy } = useClipboard();
+  const { enhancedOutput, isEnhancing, hasError, enhance } = useEnhance(output, intention, activeRules);
 
   const displayText = enhancedOutput ?? output ?? "";
 
-  const handleCopy = async () => {
-    if (!displayText) return;
-    await navigator.clipboard.writeText(displayText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const enhanceLabel = isEnhancing ? labels.enhancing : enhancedOutput ? labels.enhanced : labels.enhance;
+  const copyButtonClass = copied
+    ? "border-accent bg-accent text-bg font-semibold"
+    : "border-muted bg-surface text-muted hover:border-accent hover:text-accent";
+  const enhanceButtonClass = enhancedOutput
+    ? "border-accent bg-accent/15 text-accent"
+    : "border-muted text-muted hover:border-accent hover:text-accent";
 
-  const handleEnhance = async () => {
-    if (!output) return;
-    setIsEnhancing(true);
-    setEnhanceError(false);
-    try {
-      const res = await fetch("/api/enhance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          intention,
-          rules: Array.from(activeRules),
-          basePrompt: output,
-        }),
-      });
-      if (!res.ok) throw new Error("enhance failed");
-      const { text } = (await res.json()) as { text: string };
-      setEnhancedOutput(text);
-    } catch {
-      setEnhanceError(true);
-      setTimeout(() => setEnhanceError(false), 3000);
-    } finally {
-      setIsEnhancing(false);
-    }
-  };
+  if (isLoading) {
+    return <div className="animate-pulse rounded-md bg-surface h-48" />;
+  }
 
-  const language = detection?.language ?? null;
-  const domains = detection?.domains ?? [];
-
-  const detectionLine =
-    language || domains.length > 0
-      ? [language, ...domains].filter(Boolean).join(" · ")
-      : L.noDetection;
+  if (!displayText) {
+    return (
+      <div className="flex items-center justify-center h-48 rounded-md bg-surface text-muted text-sm">
+        {labels.placeholder}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">
-      {isLoading ? (
-        <div className="animate-pulse rounded-md bg-surface h-48" />
-      ) : displayText ? (
-        <>
-          <div className="relative">
-            <textarea
-              readOnly
-              value={displayText}
-              className="w-full h-64 rounded-md bg-surface text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent"
-              aria-label={L.ariaTextarea}
-            />
-            <button
-              onClick={handleCopy}
-              disabled={!clipboardAvailable}
-              title={!clipboardAvailable ? L.clipboardUnavailable : undefined}
-              className={`absolute top-4 right-6 px-2 py-1 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${
-                copied
-                  ? "border-accent bg-accent text-bg font-semibold"
-                  : "border-muted bg-surface text-muted hover:border-accent hover:text-accent"
-              }`}
-            >
-              {copied ? L.copied : L.copy}
-            </button>
-          </div>
+      <div className="relative">
+        <textarea
+          readOnly
+          value={displayText}
+          className="w-full h-64 rounded-md bg-surface text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent"
+          aria-label={labels.ariaTextarea}
+        />
+        <button
+          onClick={() => copy(displayText)}
+          disabled={!clipboardAvailable}
+          title={!clipboardAvailable ? labels.clipboardUnavailable : undefined}
+          className={`absolute top-4 right-6 px-2 py-1 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ${copyButtonClass}`}
+        >
+          {copied ? labels.copied : labels.copy}
+        </button>
+      </div>
 
-          <div className="flex items-center gap-4">
-            {(detection !== null || activeRules.size > 0) && (
-              <div className="flex items-center gap-3 text-xs text-muted">
-                <span
-                  className={`shrink-0 px-2 py-0.5 rounded font-mono border ${
-                    activeRules.size === 0
-                      ? "border-muted text-muted"
-                      : activeRules.size >= TOTAL_RULES / 2
-                      ? "border-accent text-accent"
-                      : "border-yellow-500 text-yellow-500"
-                  }`}
-                  title={L.owaspCoverage}
-                  aria-label={L.owaspAriaLabel(activeRules.size, TOTAL_RULES)}
-                >
-                  {L.rules(activeRules.size, TOTAL_RULES)}
-                </span>
-                <span>{detectionLine}</span>
-              </div>
-            )}
-            <button
-              onClick={handleEnhance}
-              disabled={isEnhancing || !!enhancedOutput}
-              title={enhancedOutput ? L.enhancedTitle : L.enhanceTitle}
-              className={`px-3 py-1.5 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ml-auto ${
-                enhancedOutput
-                  ? "border-accent bg-accent/15 text-accent"
-                  : "border-muted text-muted hover:border-accent hover:text-accent"
-              }`}
-            >
-              {isEnhancing ? L.enhancing : enhancedOutput ? L.enhanced : L.enhance}
-            </button>
-          </div>
+      <div className="flex items-center gap-4">
+        <DetectionInfo detection={detection} activeRules={activeRules} labels={labels} />
+        <button
+          onClick={enhance}
+          disabled={isEnhancing || !!enhancedOutput}
+          title={enhancedOutput ? labels.enhancedTitle : labels.enhanceTitle}
+          className={`px-3 py-1.5 rounded border text-xs font-mono disabled:opacity-40 disabled:cursor-not-allowed transition-colors ml-auto ${enhanceButtonClass}`}
+        >
+          {enhanceLabel}
+        </button>
+      </div>
 
-          {enhanceError && (
-            <p className="text-xs text-red-400" role="alert">
-              {L.enhanceError}
-            </p>
-          )}
-
-          <div aria-live="polite" aria-atomic="true" className="sr-only">
-            {copied && L.srCopied}
-          </div>
-        </>
-      ) : (
-        <div className="flex items-center justify-center h-48 rounded-md bg-surface text-muted text-sm">
-          {L.placeholder}
-        </div>
+      {hasError && (
+        <p className="text-xs text-red-400" role="alert">
+          {labels.enhanceError}
+        </p>
       )}
 
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {copied && labels.srCopied}
+      </div>
     </div>
   );
 }

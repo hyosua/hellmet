@@ -1,7 +1,7 @@
 "use client";
 
-import { SingleBox } from "@/components/SingleBox";
+import { PromptWorkspace } from "@/components/PromptWorkspace";
 
 export default function Home() {
-  return <SingleBox />;
+  return <PromptWorkspace />;
 }

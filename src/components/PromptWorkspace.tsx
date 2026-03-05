@@ -198,7 +198,7 @@ function reducer(state: ExtendedState, action: Action): ExtendedState {
 // Component
 // ---------------------------------------------------------------------------
 
-export function SingleBox() {
+export function PromptWorkspace() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
