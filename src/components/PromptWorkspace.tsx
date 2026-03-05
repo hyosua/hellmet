@@ -454,7 +454,7 @@ export function PromptWorkspace() {
           rel="noopener noreferrer"
           className="hover:text-accent hover:underline transition-colors"
         >
-          OWASP Top 10 ↗
+          OWASP Top 10 - 2025 ↗
         </a>
       </footer>
     </main>

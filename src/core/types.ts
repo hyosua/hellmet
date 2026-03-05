@@ -23,6 +23,7 @@ export type DomainKey =
 export interface OWASPRule {
   id: OWASPRuleId;
   name: string;
+  name_fr: string;
   constraint: string;
   constraint_en: string;
   severity: Severity;
