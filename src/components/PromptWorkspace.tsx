@@ -449,7 +449,7 @@ export function PromptWorkspace() {
 
       <footer className="mt-8 text-xs text-muted font-mono">
         <a
-          href="https://owasp.org/www-project-top-ten/"
+          href="https://owasp.org/Top10/2025"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:text-accent hover:underline transition-colors"
