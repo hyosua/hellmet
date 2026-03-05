@@ -31,31 +31,32 @@ export function Toggles({ activeToggles, autoDetected, onChange, lang = "fr" }: 
   const autoLabel = lang === "en" ? "auto-detected" : "détecté automatiquement";
 
   return (
-    <div className="flex flex-wrap gap-2" role="group" aria-label={lang === "en" ? "OWASP Rules" : "Règles OWASP"}>
+    <fieldset className="flex flex-wrap gap-2" aria-label={lang === "en" ? "OWASP Rules" : "Règles OWASP"}>
       {TOGGLE_RULES.map(({ id, label_fr, label_en }) => {
         const isAuto = autoDetected.has(id);
         const isManual = activeToggles.has(id);
         const label = lang === "en" ? label_en : label_fr;
         const constraint = constraintMap.get(id)?.[lang === "en" ? "en" : "fr"];
 
-        const state: "auto" | "manual" | "inactive" = isAuto
-          ? "auto"
-          : isManual
-          ? "manual"
-          : "inactive";
+        let state: "auto" | "manual" | "inactive" = "inactive";
+        let stateClass = "border-muted text-muted bg-transparent hover:border-text hover:text-text";
 
-        const stateClass =
-          state === "auto"
-            ? "border-accent bg-accent/20 text-accent cursor-default"
-            : state === "manual"
-            ? "border-accent bg-accent text-bg"
-            : "border-muted text-muted bg-transparent hover:border-text hover:text-text";
+        if(isAuto){
+          state = "auto";
+          stateClass = "border-accent bg-accent/20 text-accent cursor-default"
+        }else if(isManual){
+          state = "manual";
+          stateClass = "border-accent bg-accent text-bg";
+        }
+
+
+        const ariaLabel = isAuto ? `${label} (${autoLabel})` : label;
 
         return (
           <div key={id} className="relative group">
             <button
               aria-pressed={isAuto || isManual}
-              aria-label={`${label}${isAuto ? ` (${autoLabel})` : ""}`}
+              aria-label={ariaLabel}
               aria-describedby={constraint ? `tooltip-${id}` : undefined}
               disabled={isAuto}
               onClick={() => !isAuto && onChange(id, !isManual)}
@@ -73,6 +74,6 @@ export function Toggles({ activeToggles, autoDetected, onChange, lang = "fr" }: 
           </div>
         );
       })}
-    </div>
+    </fieldset>
   );
 }
