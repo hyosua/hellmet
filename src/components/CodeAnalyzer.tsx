@@ -8,7 +8,6 @@ import { detectFramework } from "@/core/framework-detector";
 import { parseDependencies, analyzeScaDependencies } from "@/core/sca-analyzer";
 import { analyzeScaDependenciesRemote } from "@/core/osv-client";
 import { getRulesByIds } from "@/core/constraints";
-import { buildFixPrompt } from "@/core/prompt-builder";
 import { ContextPanel } from "./ContextPanel";
 import { VulnerabilityReport } from "./VulnerabilityReport";
 import { Toggles } from "./Toggles";
@@ -42,6 +41,7 @@ type State = {
   toggles: Record<OWASPRuleId, boolean>;
   autoRuleIds: OWASPRuleId[];
   fixPromptOutput: PromptOutput | null;
+  fixLoading: boolean;
   error: string | null;
 };
 
@@ -56,6 +56,7 @@ const initialState: State = {
   toggles: INITIAL_TOGGLES,
   autoRuleIds: [],
   fixPromptOutput: null,
+  fixLoading: false,
   error: null,
 };
 
@@ -69,7 +70,9 @@ type Action =
   | { type: "CLEAR_SCA" }
   | { type: "SET_ANALYSIS"; analysis: CodeAnalysisResult; context: AnalysisContext }
   | { type: "TOGGLE_RULE"; id: OWASPRuleId; active: boolean }
+  | { type: "FIX_LOADING" }
   | { type: "GENERATE_FIX"; output: PromptOutput }
+  | { type: "FIX_ERROR" }
   | { type: "SET_ERROR"; message: string }
   | { type: "CLEAR" };
 
@@ -118,8 +121,12 @@ function reducer(state: State, action: Action): State {
       };
     case "TOGGLE_RULE":
       return { ...state, toggles: { ...state.toggles, [action.id]: action.active } };
+    case "FIX_LOADING":
+      return { ...state, fixLoading: true, fixPromptOutput: null };
     case "GENERATE_FIX":
-      return { ...state, fixPromptOutput: action.output };
+      return { ...state, fixLoading: false, fixPromptOutput: action.output };
+    case "FIX_ERROR":
+      return { ...state, fixLoading: false };
     case "SET_ERROR":
       return { ...state, error: action.message };
     case "CLEAR":
@@ -191,12 +198,23 @@ export function CodeAnalyzer() {
     dispatch({ type: "SET_ANALYSIS", analysis, context: resolvedContext });
   }, [state.codeInput, state.context, L.errorEmpty]);
 
-  const handleGenerateFixPrompt = useCallback(() => {
+  const handleGenerateFix = useCallback(async () => {
     const allIds = effectiveRuleIds(state.autoRuleIds, state.toggles);
     const rules = getRulesByIds(allIds);
-    const output = buildFixPrompt(state.codeInput, rules, state.lang, state.context);
-    dispatch({ type: "GENERATE_FIX", output });
-  }, [state.codeInput, state.autoRuleIds, state.toggles, state.lang, state.context]);
+    dispatch({ type: "FIX_LOADING" });
+    try {
+      const res = await fetch("/api/fix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: state.codeInput, rules: rules.map((r) => r.id), lang: state.lang }),
+      });
+      const data = await res.json() as { code?: string; error?: string };
+      if (!res.ok || !data.code) throw new Error(data.error ?? "fix failed");
+      dispatch({ type: "GENERATE_FIX", output: data.code });
+    } catch {
+      dispatch({ type: "FIX_ERROR" });
+    }
+  }, [state.codeInput, state.autoRuleIds, state.toggles, state.lang]);
 
   const handleToggle = useCallback((id: OWASPRuleId, active: boolean) => {
     dispatch({ type: "TOGGLE_RULE", id, active });
@@ -327,7 +345,8 @@ export function CodeAnalyzer() {
             result={state.analysis}
             scaResult={state.scaResult}
             fixPromptOutput={state.fixPromptOutput}
-            onGenerateFixPrompt={handleGenerateFixPrompt}
+            fixLoading={state.fixLoading}
+            onGenerateFixPrompt={handleGenerateFix}
             onClearDependencies={handleClearDependencies}
             lang={state.lang}
           />
