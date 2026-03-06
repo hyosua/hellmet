@@ -41,10 +41,11 @@ const UI = {
 interface Props {
   readonly answers: QuestionnaireAnswers;
   readonly onChange: (answers: QuestionnaireAnswers) => void;
+  readonly onSubmit: () => void;
   readonly lang: Lang;
 }
 
-export function PromptQuestionnaire({ answers, onChange, lang }: Props) {
+export function PromptQuestionnaire({ answers, onChange, onSubmit, lang }: Props) {
   const L = UI[lang];
 
   function set<K extends keyof QuestionnaireAnswers>(key: K, value: QuestionnaireAnswers[K]) {
@@ -59,6 +60,7 @@ export function PromptQuestionnaire({ answers, onChange, lang }: Props) {
         <textarea
           value={answers.description}
           onChange={(e) => set("description", e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(); } }}
           placeholder={L.descriptionPlaceholder}
           rows={3}
           className="w-full rounded-md bg-bg text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent placeholder:text-muted"

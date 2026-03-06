@@ -1,8 +1,7 @@
 "use client";
 
 import { useReducer, useCallback } from "react";
-import type { AnalysisContext, CodeAnalysisResult, OWASPRuleId, ParsedDependency, PromptOutput, ScaResult } from "@/core/types";
-import type { Framework, TargetSide } from "@/core/types";
+import type { AnalysisContext, CodeAnalysisResult, OWASPRuleId, ParsedDependency, PromptOutput, ScaResult, Framework } from "@/core/types";
 import type { Lang } from "@/core/prompt-builder";
 import { analyzeCode } from "@/core/code-analyzer";
 import { detectFramework } from "@/core/framework-detector";
@@ -59,7 +58,6 @@ type Action =
   | { type: "SET_CODE"; payload: string }
   | { type: "SET_LANG"; lang: Lang }
   | { type: "SET_FRAMEWORK"; framework: Framework | null }
-  | { type: "SET_TARGET_SIDE"; targetSide: TargetSide }
   | { type: "SET_SCA"; scaResult: ScaResult; deps: ParsedDependency[] }
   | { type: "SET_ANALYSIS"; analysis: CodeAnalysisResult; context: AnalysisContext }
   | { type: "TOGGLE_RULE"; id: OWASPRuleId; active: boolean }
@@ -82,8 +80,6 @@ function reducer(state: State, action: Action): State {
           frameworkSource: "manual",
         },
       };
-    case "SET_TARGET_SIDE":
-      return { ...state, context: { ...state.context, targetSide: action.targetSide } };
     case "SET_SCA":
       return {
         ...state,
@@ -189,10 +185,6 @@ export function CodeAnalyzer() {
     dispatch({ type: "SET_FRAMEWORK", framework });
   }, []);
 
-  const handleTargetSideChange = useCallback((targetSide: TargetSide) => {
-    dispatch({ type: "SET_TARGET_SIDE", targetSide });
-  }, []);
-
   const handleDependenciesDrop = useCallback((packageJsonStr: string) => {
     const deps = parseDependencies(packageJsonStr);
     const scaResult = analyzeScaDependencies(deps);
@@ -256,7 +248,6 @@ export function CodeAnalyzer() {
       <ContextPanel
         context={state.context}
         onFrameworkChange={handleFrameworkChange}
-        onTargetSideChange={handleTargetSideChange}
         onDependenciesDrop={handleDependenciesDrop}
         scaResult={state.scaResult}
         lang={state.lang}
@@ -269,6 +260,7 @@ export function CodeAnalyzer() {
           <textarea
             value={state.codeInput}
             onChange={(e) => dispatch({ type: "SET_CODE", payload: e.target.value })}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAnalyze(); } }}
             placeholder={L.placeholder}
             rows={20}
             className="w-full flex-1 rounded-md bg-surface text-text font-mono text-sm p-3 resize-none outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent placeholder:text-muted"

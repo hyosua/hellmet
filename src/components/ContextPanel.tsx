@@ -1,13 +1,12 @@
 "use client";
 
-import type { AnalysisContext, Framework, ScaResult, TargetSide } from "@/core/types";
+import type { AnalysisContext, Framework, ScaResult } from "@/core/types";
 import type { Lang } from "@/core/prompt-builder";
 import { FRAMEWORK_LABELS } from "@/core/framework-detector";
 
 interface ContextPanelProps {
   readonly context: AnalysisContext;
   readonly onFrameworkChange: (f: Framework | null) => void;
-  readonly onTargetSideChange: (t: TargetSide) => void;
   readonly onDependenciesDrop: (packageJsonStr: string) => void;
   readonly scaResult: ScaResult | null;
   readonly lang: Lang;
@@ -31,10 +30,6 @@ const UI = {
   fr: {
     framework: "Framework",
     auto: "Auto-detect",
-    target: "Cible",
-    client: "Client",
-    both: "Les deux",
-    server: "Serveur",
     dropzone: "Déposer package.json",
     dropzoneHint: "ou cliquer pour choisir",
     loaded: (n: number) => `${n} paquet${n > 1 ? "s" : ""} chargé${n > 1 ? "s" : ""}`,
@@ -44,10 +39,6 @@ const UI = {
   en: {
     framework: "Framework",
     auto: "Auto-detect",
-    target: "Target",
-    client: "Client",
-    both: "Both",
-    server: "Server",
     dropzone: "Drop package.json",
     dropzoneHint: "or click to choose",
     loaded: (n: number) => `${n} package${n > 1 ? "s" : ""} loaded`,
@@ -59,7 +50,6 @@ const UI = {
 export function ContextPanel({
   context,
   onFrameworkChange,
-  onTargetSideChange,
   onDependenciesDrop,
   scaResult,
   lang,
@@ -98,12 +88,6 @@ export function ContextPanel({
       ? context.framework
       : "auto";
 
-  const sides: Array<{ value: TargetSide; label: string }> = [
-    { value: "client", label: L.client },
-    { value: "both", label: L.both },
-    { value: "server", label: L.server },
-  ];
-
   return (
     <div className="flex flex-wrap items-center gap-3 px-1">
       {/* Framework selector */}
@@ -132,26 +116,6 @@ export function ContextPanel({
             {L.detected}
           </span>
         )}
-      </div>
-
-      {/* Target side toggle */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-muted font-mono">{L.target}</span>
-        <div className="flex rounded border border-muted overflow-hidden">
-          {sides.map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => onTargetSideChange(value)}
-              className={`px-2.5 py-1 text-xs font-mono transition-colors ${
-                context.targetSide === value
-                  ? "bg-accent text-bg"
-                  : "text-muted hover:text-text hover:bg-surface"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Drag & drop zone */}

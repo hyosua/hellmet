@@ -311,6 +311,7 @@ export function PromptWorkspace() {
           <PromptQuestionnaire
             answers={state.answers}
             onChange={(answers) => dispatch({ type: "SET_ANSWERS", answers })}
+            onSubmit={handleSubmit}
             lang={state.lang}
           />
 
