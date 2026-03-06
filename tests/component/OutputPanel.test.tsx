@@ -5,20 +5,11 @@ import React from "react";
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { OutputPanel } from "@/components/OutputPanel";
-import type { Detection } from "@/core/types";
-
 const mockOutput = "<task>Test intention</task>";
-
-const mockDetection: Detection = {
-  language: "Node.js",
-  domains: ["api"],
-  matchedKeywords: ["node", "api"],
-};
 
 const defaultProps = {
   output: mockOutput,
   isLoading: false,
-  detection: mockDetection,
   activeRules: new Set<"A01" | "A02" | "A03" | "A04" | "A05" | "A06" | "A07" | "A08" | "A09" | "A10">(["A01"]),
   intention: "Crée une route api en Node",
 };
@@ -85,11 +76,6 @@ describe("OutputPanel — rendering states", () => {
   it("shows placeholder when output is null", () => {
     render(<OutputPanel {...defaultProps} output={null} />);
     expect(screen.getByText(/Le prompt sécurisé apparaîtra ici/i)).toBeInTheDocument();
-  });
-
-  it("shows detection metadata when detection is set", () => {
-    render(<OutputPanel {...defaultProps} />);
-    expect(screen.getByText(/Node\.js · api/)).toBeInTheDocument();
   });
 
   it("shows coverage score badge", () => {

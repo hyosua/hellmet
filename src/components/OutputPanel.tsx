@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Detection, OWASPRuleId, PromptOutput } from "@/core/types";
+import type { OWASPRuleId, PromptOutput } from "@/core/types";
 import { getRules } from "@/core/constraints";
 
 type Lang = "fr" | "en";
@@ -108,7 +108,6 @@ function useEnhance(output: PromptOutput | null, intention: string, activeRules:
 const TOTAL_RULES = getRules().length;
 
 interface DetectionInfoProps {
-  readonly detection: Detection | null;
   readonly activeRules: Set<OWASPRuleId>;
   readonly labels: (typeof UI)[Lang];
 }
@@ -119,15 +118,8 @@ function badgeClass(size: number): string {
   return "border-yellow-500 text-yellow-500";
 }
 
-function DetectionInfo({ detection, activeRules, labels }: DetectionInfoProps) {
-  if (detection === null && activeRules.size === 0) return null;
-
-  const language = detection?.language ?? null;
-  const domains = detection?.domains ?? [];
-  const detectionLine =
-    language || domains.length > 0
-      ? [language, ...domains].filter(Boolean).join(" · ")
-      : labels.noDetection;
+function DetectionInfo({ activeRules, labels }: DetectionInfoProps) {
+  if (activeRules.size === 0) return null;
 
   return (
     <div className="flex items-center gap-3 text-xs text-muted">
@@ -138,7 +130,6 @@ function DetectionInfo({ detection, activeRules, labels }: DetectionInfoProps) {
       >
         {labels.rules(activeRules.size, TOTAL_RULES)}
       </span>
-      <span>{detectionLine}</span>
     </div>
   );
 }
@@ -150,7 +141,6 @@ function DetectionInfo({ detection, activeRules, labels }: DetectionInfoProps) {
 interface OutputPanelProps {
   readonly output: PromptOutput | null;
   readonly isLoading: boolean;
-  readonly detection: Detection | null;
   readonly activeRules: Set<OWASPRuleId>;
   readonly intention: string;
   readonly lang?: Lang;
@@ -159,7 +149,6 @@ interface OutputPanelProps {
 export function OutputPanel({
   output,
   isLoading,
-  detection,
   activeRules,
   intention,
   lang = "fr",
@@ -217,7 +206,7 @@ export function OutputPanel({
       </div>
 
       <div className="flex items-center gap-4">
-        <DetectionInfo detection={detection} activeRules={activeRules} labels={labels} />
+        <DetectionInfo activeRules={activeRules} labels={labels} />
         <button
           onClick={enhance}
           disabled={isEnhancing || !!enhancedOutput}

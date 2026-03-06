@@ -1,11 +1,11 @@
 "use client";
 
 import { useReducer, useCallback, useState, useEffect } from "react";
-import type { AppState, Detection, OWASPRuleId, PromptOutput } from "@/core/types";
-import { detect } from "@/core/detector";
-import { getRulesForDomains } from "@/core/owasp-map";
+import type { AppState, OWASPRuleId, PromptOutput } from "@/core/types";
+import { type QuestionnaireAnswers, INITIAL_ANSWERS, mapAnswersToRules } from "@/core/questionnaire-mapper";
 import { getRulesByIds } from "@/core/constraints";
 import { buildPrompt } from "@/core/prompt-builder";
+import { PromptQuestionnaire } from "./PromptQuestionnaire";
 import { OutputPanel } from "./OutputPanel";
 import { Toggles } from "./Toggles";
 import { ThemeToggle } from "./ThemeToggle";
@@ -57,9 +57,8 @@ const UI = {
 // ---------------------------------------------------------------------------
 
 interface HistoryEntry {
-  intention: string;
+  answers: QuestionnaireAnswers;
   output: PromptOutput;
-  detection: Detection;
   autoRuleIds: OWASPRuleId[];
   timestamp: number;
 }
@@ -101,15 +100,15 @@ const INITIAL_TOGGLES: Record<OWASPRuleId, boolean> = {
 
 type Lang = "fr" | "en";
 
-type ExtendedState = AppState & {
+type ExtendedState = Omit<AppState, "intention" | "detection"> & {
+  answers: QuestionnaireAnswers;
   error: string | null;
   autoRuleIds: OWASPRuleId[];
   lang: Lang;
 };
 
 const initialState: ExtendedState = {
-  intention: "",
-  detection: null,
+  answers: INITIAL_ANSWERS,
   toggles: INITIAL_TOGGLES,
   output: null,
   isLoading: false,
@@ -119,14 +118,9 @@ const initialState: ExtendedState = {
 };
 
 type Action =
-  | { type: "SET_INTENTION"; payload: string }
+  | { type: "SET_ANSWERS"; answers: QuestionnaireAnswers }
   | { type: "START_LOADING" }
-  | {
-      type: "SET_RESULT";
-      detection: Detection;
-      output: PromptOutput;
-      autoRuleIds: OWASPRuleId[];
-    }
+  | { type: "SET_RESULT"; output: PromptOutput; autoRuleIds: OWASPRuleId[] }
   | { type: "SET_ERROR"; message: string }
   | { type: "TOGGLE_RULE"; id: OWASPRuleId; active: boolean }
   | { type: "RESET_TOGGLES" }
@@ -145,15 +139,14 @@ function effectiveRuleIds(
 
 function reducer(state: ExtendedState, action: Action): ExtendedState {
   switch (action.type) {
-    case "SET_INTENTION":
-      return { ...state, intention: action.payload, error: null };
+    case "SET_ANSWERS":
+      return { ...state, answers: action.answers, error: null };
     case "START_LOADING":
       return { ...state, isLoading: true, error: null };
     case "SET_RESULT":
       return {
         ...state,
         isLoading: false,
-        detection: action.detection,
         output: action.output,
         autoRuleIds: action.autoRuleIds,
         error: null,
@@ -164,30 +157,24 @@ function reducer(state: ExtendedState, action: Action): ExtendedState {
       return initialState;
     case "TOGGLE_RULE": {
       const newToggles = { ...state.toggles, [action.id]: action.active };
-      if (!state.output || !state.intention.trim()) {
-        return { ...state, toggles: newToggles };
-      }
+      if (!state.output) return { ...state, toggles: newToggles };
       const allIds = effectiveRuleIds(state.autoRuleIds, newToggles);
       const rules = getRulesByIds(allIds);
-      const output = buildPrompt(state.intention, rules, state.lang);
+      const output = buildPrompt(state.answers.description, rules, state.lang);
       return { ...state, toggles: newToggles, output };
     }
     case "RESET_TOGGLES": {
-      if (!state.output || !state.intention.trim()) {
-        return { ...state, toggles: INITIAL_TOGGLES };
-      }
+      if (!state.output) return { ...state, toggles: INITIAL_TOGGLES };
       const allIds = effectiveRuleIds(state.autoRuleIds, INITIAL_TOGGLES);
       const rules = getRulesByIds(allIds);
-      const output = buildPrompt(state.intention, rules, state.lang);
+      const output = buildPrompt(state.answers.description, rules, state.lang);
       return { ...state, toggles: INITIAL_TOGGLES, output };
     }
     case "SET_LANG": {
-      if (!state.output || !state.intention.trim()) {
-        return { ...state, lang: action.lang };
-      }
+      if (!state.output) return { ...state, lang: action.lang };
       const allIds = effectiveRuleIds(state.autoRuleIds, state.toggles);
       const rules = getRulesByIds(allIds);
-      const output = buildPrompt(state.intention, rules, action.lang);
+      const output = buildPrompt(state.answers.description, rules, action.lang);
       return { ...state, lang: action.lang, output };
     }
     default:
@@ -211,18 +198,17 @@ export function PromptWorkspace() {
 
   // Persist history when a new result is generated
   useEffect(() => {
-    if (!state.output || !state.detection || !state.intention.trim()) return;
+    if (!state.output || !state.answers.description.trim()) return;
     const entry: HistoryEntry = {
-      intention: state.intention,
+      answers: state.answers,
       output: state.output,
-      detection: state.detection,
       autoRuleIds: state.autoRuleIds,
       timestamp: Date.now(),
     };
     setHistory((prev) => {
       const next = [
         entry,
-        ...prev.filter((e) => e.intention !== state.intention),
+        ...prev.filter((e) => e.answers?.description !== state.answers?.description),
       ].slice(0, MAX_HISTORY);
       saveHistory(next);
       return next;
@@ -231,44 +217,28 @@ export function PromptWorkspace() {
   }, [state.output]);
 
   const handleSubmit = useCallback(() => {
-    if (!state.intention.trim()) {
+    if (!state.answers.description.trim()) {
       dispatch({ type: "SET_ERROR", message: UI[state.lang].errorEmpty });
       return;
     }
 
     dispatch({ type: "START_LOADING" });
 
-    const detection = detect(state.intention);
-    const autoRuleIds = getRulesForDomains(detection.domains);
+    const autoRuleIds = mapAnswersToRules(state.answers);
     const allIds = effectiveRuleIds(autoRuleIds, state.toggles);
     const rules = getRulesByIds(allIds);
-    const output = buildPrompt(state.intention, rules, state.lang);
+    const output = buildPrompt(state.answers.description, rules, state.lang);
 
-    dispatch({ type: "SET_RESULT", detection, output, autoRuleIds });
-  }, [state.intention, state.toggles]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleSubmit();
-      }
-    },
-    [handleSubmit]
-  );
+    dispatch({ type: "SET_RESULT", output, autoRuleIds });
+  }, [state.answers, state.toggles, state.lang]);
 
   const handleToggle = useCallback((id: OWASPRuleId, active: boolean) => {
     dispatch({ type: "TOGGLE_RULE", id, active });
   }, []);
 
   const handleRestoreHistory = useCallback((entry: HistoryEntry) => {
-    dispatch({ type: "SET_INTENTION", payload: entry.intention });
-    dispatch({
-      type: "SET_RESULT",
-      detection: entry.detection,
-      output: entry.output,
-      autoRuleIds: entry.autoRuleIds,
-    });
+    dispatch({ type: "SET_ANSWERS", answers: entry.answers });
+    dispatch({ type: "SET_RESULT", output: entry.output, autoRuleIds: entry.autoRuleIds });
     setHistoryOpen(false);
   }, []);
 
@@ -337,17 +307,11 @@ export function PromptWorkspace() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-md border border-muted bg-surface p-4">
-          <textarea
-            value={state.intention}
-            onChange={(e) =>
-              dispatch({ type: "SET_INTENTION", payload: e.target.value })
-            }
-            onKeyDown={handleKeyDown}
-            placeholder={L.placeholder}
-            rows={3}
-            className="w-full rounded-md bg-bg text-text font-mono text-sm p-3 resize-y outline-hidden border border-muted focus:border-accent focus:ring-1 focus:ring-accent placeholder:text-muted"
-            aria-label={L.ariaTextarea}
+        <div className="flex flex-col gap-4 rounded-md border border-muted bg-surface p-4">
+          <PromptQuestionnaire
+            answers={state.answers}
+            onChange={(answers) => dispatch({ type: "SET_ANSWERS", answers })}
+            lang={state.lang}
           />
 
           {state.error && (
@@ -356,40 +320,39 @@ export function PromptWorkspace() {
             </p>
           )}
 
-        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            {/* History */}
+            {history.length > 0 && (
+              <button
+                onClick={() => setHistoryOpen((o) => !o)}
+                className="px-4 py-2.5 rounded-md border border-muted text-muted font-mono text-sm hover:border-text hover:text-text transition-colors"
+                aria-expanded={historyOpen}
+                aria-controls="history-panel"
+              >
+                {L.historyBtn(history.length, historyOpen)}
+              </button>
+            )}
 
-          {/* History */}
-          {history.length > 0 && (
+            {/* Clear */}
             <button
-              onClick={() => setHistoryOpen((o) => !o)}
-              className="px-4 py-2.5 rounded-md border border-muted text-muted font-mono text-sm hover:border-text hover:text-text transition-colors"
-              aria-expanded={historyOpen}
-              aria-controls="history-panel"
+              onClick={() => dispatch({ type: "CLEAR" })}
+              disabled={!state.answers.description && !state.output}
+              className="px-4 py-2.5 rounded-md border border-red-500/60 bg-red-500/10 text-red-400 font-mono text-sm hover:bg-red-700/10 hover:border-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-red-500/60"
+              aria-label={L.ariaClear}
             >
-              {L.historyBtn(history.length, historyOpen)}
+              {L.clear}
             </button>
-          )}
 
-          {/* Clear — always visible, disabled if nothing to clear */}
-          <button
-            onClick={() => dispatch({ type: "CLEAR" })}
-            disabled={!state.intention && !state.output}
-            className="px-4 py-2.5 rounded-md border border-red-500/60 bg-red-500/10 text-red-400 font-mono text-sm hover:bg-red-700/10 hover:border-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:border-red-500/60"
-            aria-label={L.ariaClear}
-          >
-            {L.clear}
-          </button>
-
-          {/* Run — pushed to the right */}
-          <button
-            onClick={handleSubmit}
-            disabled={state.isLoading}
-            className="ml-auto flex items-center gap-2.5 px-5 py-2.5 rounded-md bg-accent text-bg font-mono font-semibold text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-            aria-label={L.ariaRun}
-          >
-            {L.run}
-          </button>
-        </div>
+            {/* Run */}
+            <button
+              onClick={handleSubmit}
+              disabled={state.isLoading}
+              className="ml-auto flex items-center gap-2.5 px-5 py-2.5 rounded-md bg-accent text-bg font-mono font-semibold text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+              aria-label={L.ariaRun}
+            >
+              {L.run}
+            </button>
+          </div>
         </div>
 
         {/* History panel */}
@@ -400,7 +363,7 @@ export function PromptWorkspace() {
                 key={entry.timestamp}
                 onClick={() => handleRestoreHistory(entry)}
                 className="text-left px-3 py-2 rounded text-xs font-mono text-muted hover:bg-bg hover:text-text transition-colors truncate"
-                title={entry.intention}
+                title={entry.answers?.description}
               >
                 <span className="text-accent">
                   {new Date(entry.timestamp).toLocaleTimeString(L.locale, {
@@ -408,7 +371,7 @@ export function PromptWorkspace() {
                     minute: "2-digit",
                   })}
                 </span>{" "}
-                {entry.intention}
+                {entry.answers?.description}
               </button>
             ))}
           </div>
@@ -446,9 +409,8 @@ export function PromptWorkspace() {
           <OutputPanel
             output={state.output}
             isLoading={state.isLoading}
-            detection={state.detection}
             activeRules={activeRules}
-            intention={state.intention}
+            intention={state.answers.description}
             lang={state.lang}
           />
         </div>
