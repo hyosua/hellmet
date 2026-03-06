@@ -1,84 +1,89 @@
 # Hellmet
 
-**Un constructeur de prompts sécurisés pour les développeurs qui travaillent avec des LLMs.**
+**Un analyseur statique de vulnérabilités de code basé sur l'OWASP Top 10 (2025).**
 
-Hellmet prend une intention de code en langage naturel et la transforme en un prompt structuré et renforcé en sécurité, en injectant automatiquement les contraintes OWASP Top 10 pertinentes pour le domaine technique détecté.
+hellmet scanne un snippet de code pour y détecter des failles de sécurité à l'aide de patterns regex côté client, regroupe les résultats par règle OWASP, et génère un prompt XML de correction prêt à coller dans n'importe quel LLM.
+
+Un outil secondaire — le Prompt Builder — permet d'ajouter un contexte de sécurité à une intention de code en langage naturel. Il est accessible à `/prompt`.
 
 ---
 
 ## Sommaire
 
-- [Pourquoi OWASP dès la conception](#pourquoi-owasp-dès-la-conception)
+- [Pourquoi analyser le code avant de prompter](#pourquoi-analyser-le-code-avant-de-prompter)
 - [Comment ça marche](#comment-ça-marche)
 - [Exemples](#exemples)
+- [Patterns détectés](#patterns-détectés)
 - [Fonctionnalités](#fonctionnalités)
 - [Installation](#installation)
 - [Lancer les tests](#lancer-les-tests)
 
 ---
 
-## Pourquoi OWASP dès la conception
+## Pourquoi analyser le code avant de prompter
 
-Les vulnérabilités de sécurité sont bien moins coûteuses à corriger lorsqu'elles sont traitées dès la phase de conception. L'OWASP Top 10 est la classification de référence des risques les plus critiques en sécurité des applications web — pourtant, dans la pratique, elle n'est consultée qu'après un incident ou un audit.
+Le code généré par les LLMs est fonctionnel par défaut, sécurisé par accident. Lorsque les développeurs collent des snippets générés par IA dans leur base de code sans relecture, les vulnérabilités courantes — injection SQL, secrets codés en dur, JWT sans expiration, blocs catch vides — passent inaperçues.
 
-Lorsque les développeurs utilisent des LLMs pour générer du code, ils fournissent généralement des prompts courts et orientés objectif : *"crée une route d'authentification"*, *"ajoute un formulaire d'upload"*. Ces prompts ne contiennent aucun contexte de sécurité. Le modèle produit un code fonctionnel, mais les contraintes de sécurité sont laissées au hasard ou à une revue a posteriori.
+Hellmet comble ce manque avant que le patch n'atteigne la production. Collez le code, obtenez un rapport de vulnérabilités annoté, puis collez le prompt de correction généré directement dans Claude ou ChatGPT. Le modèle reçoit les contraintes OWASP exactes qui s'appliquent, et non une instruction générique "rends ça sécurisé".
 
-Hellmet comble ce manque à la source. Avant que le prompt n'atteigne le LLM, il est enrichi avec les contraintes OWASP précises correspondant au domaine technique détecté. Le développeur n'a pas besoin de mémoriser la classification OWASP — l'outil fait la correspondance automatiquement et l'injecte sous forme de bloc de contraintes lisible par la machine.
-
-Le principe est simple : **si les exigences de sécurité sont dans le prompt, le modèle est contraint d'en tenir compte**.
+Le principe : **nommer la vulnérabilité, citer la règle, obtenir un correctif ciblé**.
 
 ---
 
 ## Comment ça marche
 
-1. Le développeur saisit une intention de code en texte libre.
-2. Hellmet détecte le langage de programmation et les domaines techniques (authentification, base de données, upload, API, frontend, cryptographie).
-3. Les règles OWASP pertinentes sont sélectionnées et triées par sévérité (critiques en premier).
-4. L'intention est réécrite sous forme de prompt structuré dans deux formats : Claude XML et GPT Markdown.
-5. Optionnellement, le prompt est enrichi par un LLM hébergé sur Groq (Llama 3.3 70B) agissant strictement comme rééditeur de prompt — pas comme générateur de code.
+### Code Analyzer (feature principale — `/`)
+
+1. Collez un snippet de code dans la zone de saisie.
+2. Cliquez sur **Analyser** — la détection s'exécute entièrement côté client, de façon synchrone.
+3. Les correspondances sont regroupées par règle OWASP (A01–A10), avec numéro de ligne, snippet et explication.
+4. Les toggles OWASP concernés sont activés automatiquement (grisés — auto-détectés).
+5. Cliquez sur **Générer le prompt de correction** — produit un prompt XML structuré avec le bloc de code original et les contraintes applicables triées par sévérité.
+6. Copiez et collez dans votre LLM.
+
+### Prompt Builder (feature secondaire — `/prompt`)
+
+Saisissez une intention de code en texte libre. Hellmet détecte le domaine technique et le langage, les mappe vers des règles OWASP, et génère un prompt durci. Utile avant d'écrire du code plutôt qu'après.
 
 ---
 
 ## Exemples
 
-### Entrée
+### Entrée (Code Analyzer)
 
-> Create a Node.js route that handles file uploads from authenticated users and stores them on S3.
+```php
+$user_id = $_GET['user_id'];
+$query = "SELECT * FROM users WHERE id = $user_id";
+$result = mysqli_query($conn, $query);
+```
 
-### Domaines détectés
+### Vulnérabilités détectées
 
-`api`, `upload`, `auth`
+| Règle | Pattern | Ligne | Constat |
+|-------|---------|-------|---------|
+| A05 — Injection | `sql-php-interpolation` | 2 | Interpolation de variable PHP dans une chaîne SQL |
 
-### Règles OWASP injectées
-
-| Règle | Sévérité | Contrainte |
-|-------|----------|------------|
-| A01 — Contrôle d'accès | critique | Vérifier l'authentification et l'autorisation avant toute action. |
-| A02 — Défaillances cryptographiques | critique | Utiliser TLS pour tous les transferts ; ne jamais exposer les credentials dans les logs ou les réponses. |
-| A04 — Conception non sécurisée | haute | Valider le vrai type MIME du fichier, pas seulement l'extension. Imposer une taille maximale. |
-| A07 — Identification et authentification | haute | Valider le token de session à chaque requête ; l'invalider à la déconnexion. |
-| A08 — Intégrité des données et des logiciels | haute | Vérifier l'intégrité des fichiers uploadés ; rejeter tout contenu exécutable. |
-| A06 — Composants vulnérables | moyenne | Auditer toutes les dépendances tierces utilisées dans cette fonctionnalité. |
-
-### Prompt Claude XML généré
+### Prompt de correction généré
 
 ```xml
 <task>
-Create a Node.js route that handles file uploads from authenticated users and stores them on S3.
+Corrige les vulnérabilités de sécurité dans le code ci-dessous.
 </task>
 
+<code>
+$user_id = $_GET['user_id'];
+$query = "SELECT * FROM users WHERE id = $user_id";
+$result = mysqli_query($conn, $query);
+</code>
+
 <security_constraints>
-[A01 — Access Control] Verify authentication and authorization before any action.
-[A02 — Cryptographic Failures] Use TLS for all transfers; never expose credentials in logs or responses.
-[A04 — Insecure Design] Validate the real MIME type of the file, not just the extension. Enforce maximum file size.
-[A07 — Identification and Auth] Validate the session token on every request; invalidate it on logout.
-[A08 — Software and Data Integrity] Verify the integrity of uploaded files; reject executable content.
-[A06 — Vulnerable Components] Audit all third-party dependencies used in this feature.
+[A05 — Injection] Utiliser exclusivement des requêtes paramétrées ou un ORM.
+Aucune concaténation de chaînes pour construire des requêtes SQL.
 </security_constraints>
 
 <instructions>
-Reply only with secure code that satisfies all the constraints above.
-Explicitly acknowledge each constraint in a comment at the top of the file.
+Réponds uniquement avec le code corrigé. Pour chaque modification, ajoute un
+commentaire inline expliquant la correction OWASP.
 </instructions>
 ```
 
@@ -86,26 +91,67 @@ Explicitly acknowledge each constraint in a comment at the top of the file.
 
 ### Autre exemple
 
-**Entrée :** *"Add a password reset form with email verification"*
+**Entrée :**
+```javascript
+const token = jwt.sign({ userId: user.id }, SECRET);
+const secret = "hardcoded_api_key_123";
+```
 
-**Domaines détectés :** `auth`, `frontend`
+**Détecté :** A07 (`jwt-no-expiry`) + A04 (`hardcoded-secret`)
 
-**Règles injectées :** A02 (hacher les mots de passe avec bcrypt, imposer une entropie minimale), A07 (limiter le débit des tentatives de réinitialisation, expirer les tokens après 15 minutes), A03 (assainir toutes les entrées utilisateur avant rendu).
+**Le prompt de correction** inclut les deux règles triées par sévérité (A04 critique avant A07 critique), avec le bloc de code original intégré dans `<code>`.
 
-Le développeur colle le prompt généré directement dans Claude, ChatGPT ou Cursor. Le modèle reçoit les exigences de sécurité comme des contraintes dures, non comme des suggestions optionnelles.
+---
+
+## Patterns détectés
+
+19 patterns répartis sur 6 catégories OWASP :
+
+| Pattern | Règle | Cible |
+|---------|-------|-------|
+| `sql-template-literal` | A05 | Template literal JS avec SQL et `${` |
+| `sql-php-interpolation` | A05 | Double quotes PHP avec SQL et `$var` |
+| `sql-string-concat` | A05 | Variable concaténée dans une chaîne SQL |
+| `eval-call` | A05 | `eval(` |
+| `innerHTML-assign` | A05 | `.innerHTML =` |
+| `dangerously-set-html` | A05 | `dangerouslySetInnerHTML={{` |
+| `document-write` | A05 | `document.write(` |
+| `hardcoded-secret` | A04 | `secret/password/token/key = "..."` |
+| `math-random-token` | A04 | `Math.random()` |
+| `md5-usage` | A04 | `md5(` |
+| `sha1-usage` | A04 | `sha1(` |
+| `hardcoded-credentials` | A07 | `username/user/password = "..."` |
+| `jwt-no-expiry` | A07 | `jwt.sign(` sans `expiresIn` dans le scope |
+| `cors-wildcard` | A02 | `origin: '*'` |
+| `debug-true` | A02 | `debug: true` |
+| `httponly-false` | A02 | `httpOnly: false` |
+| `unsafe-json-parse` | A08 | `JSON.parse(req.` |
+| `password-in-log` | A09 | `console.log(... password/token/secret)` |
+| `empty-catch` | A10 | `catch(e) {}` |
+
+La détection est entièrement côté client (regex, synchrone). Aucun appel serveur, aucune dépendance externe.
 
 ---
 
 ## Fonctionnalités
 
-- Détection automatique du domaine à partir du texte libre (langage + contexte technique)
-- Couverture complète de l'OWASP Top 10 (2021) avec niveaux de sévérité
-- Surcharge manuelle des règles via des boutons de bascule
-- Deux formats de sortie : Claude XML et GPT Markdown
-- Sélecteur de langue de sortie FR / EN
-- Enrichissement IA via Groq (Llama 3.3 70B) — réécrit sans exécuter
-- Historique de session (5 derniers prompts, stockés localement)
-- Raccourci clavier : `Ctrl+Entrée` pour générer
+**Code Analyzer (`/`)**
+- Détection statique : 19 patterns, 6 catégories OWASP, instantanée
+- Rapport groupé par règle avec numéro de ligne, snippet et explication (FR/EN)
+- Toggles OWASP auto-activés à la détection, surchargeables manuellement
+- Prompt de correction : XML avec bloc `<code>` + contraintes triées par sévérité
+- Copie dans le presse-papier
+
+**Prompt Builder (`/prompt`)**
+- Détection du domaine depuis le texte libre (11 langages, 6 domaines)
+- Injection des règles OWASP Top 10 (2025) triées par sévérité
+- Surcharge manuelle via toggles, historique de session (5 derniers prompts)
+- Enrichissement IA optionnel via Groq (Llama 3.3 70B)
+
+**Les deux outils**
+- Sélecteur FR / EN
+- Thème sombre / clair
+- OWASP Top 10 — 2025
 
 ---
 
@@ -119,7 +165,7 @@ cd hellmet
 npm install
 ```
 
-Copiez le fichier d'environnement et ajoutez votre clé API Groq (requise uniquement pour l'enrichissement IA — le constructeur de prompts principal fonctionne sans) :
+Copiez le fichier d'environnement et ajoutez votre clé API Groq (requise uniquement pour l'enrichissement IA — l'analyseur et le Prompt Builder fonctionnent sans) :
 
 ```bash
 cp .env.example .env.local
@@ -135,7 +181,8 @@ Démarrez le serveur de développement :
 npm run dev
 ```
 
-Ouvrez [http://localhost:3000](http://localhost:3000).
+Ouvrez [http://localhost:3000](http://localhost:3000) pour le Code Analyzer.
+Ouvrez [http://localhost:3000/prompt](http://localhost:3000/prompt) pour le Prompt Builder.
 
 ---
 
@@ -145,8 +192,6 @@ Ouvrez [http://localhost:3000](http://localhost:3000).
 npm test
 ```
 
-La suite de tests couvre tous les modules principaux (`detector`, `prompt-builder`, `owasp-map`) ainsi que les composants UI à logique conditionnelle (`OutputPanel`, `Toggles`).
+La suite de tests couvre tous les modules principaux (`code-analyzer`, `detector`, `prompt-builder`, `owasp-map`) ainsi que les composants UI (`OutputPanel`, `Toggles`).
 
-```bash
-npm run test:watch   # mode surveillance
-```
+74 tests — unitaires + composants.
