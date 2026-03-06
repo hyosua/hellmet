@@ -1,7 +1,7 @@
 "use client";
 
-import { PromptWorkspace } from "@/components/PromptWorkspace";
+import { CodeAnalyzer } from "@/components/CodeAnalyzer";
 
 export default function Home() {
-  return <PromptWorkspace />;
+  return <CodeAnalyzer />;
 }

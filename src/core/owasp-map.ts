@@ -1,12 +1,12 @@
 import type { DomainKey, OWASPRuleId } from "./types";
 
 export const DOMAIN_MAP: Record<DomainKey, OWASPRuleId[]> = {
-  auth: ["A02", "A07"],
-  upload: ["A01", "A04", "A08"],
-  database: ["A03"],
-  api: ["A01", "A05", "A06", "A08", "A10"],
-  frontend: ["A03", "A05", "A06"],
-  crypto: ["A02"],
+  auth:     ["A07", "A04"],                    // Auth Failures, Crypto Failures
+  upload:   ["A06", "A01", "A08"],             // Insecure Design, Access Control, Integrity Failures
+  database: ["A05"],                           // Injection
+  api:      ["A01", "A05", "A06", "A08", "A10"], // Access Control, Injection, Insecure Design, Integrity, Exceptions
+  frontend: ["A05", "A06"],                    // Injection (XSS), Insecure Design
+  crypto:   ["A04"],                           // Crypto Failures
 };
 
 /**

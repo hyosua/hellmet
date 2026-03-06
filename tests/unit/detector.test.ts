@@ -49,7 +49,7 @@ describe("detect() — single-domain detection", () => {
   });
 
   it("detects frontend domain", () => {
-    const result = detect("Crée un composant React avec un formulaire input");
+    const result = detect("Crée un composant React avec XSS frontend");
     expect(result.domains).toContain("frontend");
   });
 
@@ -66,19 +66,19 @@ describe("detect() — single-domain detection", () => {
 
 describe("detect() — multi-domain detection", () => {
   it("detects both auth and frontend for a login form", () => {
-    const result = detect("Crée un formulaire de login avec validation");
+    const result = detect("Crée une page React de login avec JWT et protection XSS");
     expect(result.domains).toContain("auth");
     expect(result.domains).toContain("frontend");
   });
 
   it("detects both api and upload for an upload route", () => {
-    const result = detect("Crée une route d'api pour uploader des images en Node");
+    const result = detect("Crée un endpoint REST pour uploader des images en Node");
     expect(result.domains).toContain("api");
     expect(result.domains).toContain("upload");
   });
 
   it("detects both database and auth for authenticated query", () => {
-    const result = detect("Requête SQL sécurisée avec authentification JWT");
+    const result = detect("Requête SQL avec query ORM et JWT");
     expect(result.domains).toContain("database");
     expect(result.domains).toContain("auth");
   });

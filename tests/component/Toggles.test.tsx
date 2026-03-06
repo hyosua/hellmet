@@ -32,7 +32,7 @@ describe("Toggles", () => {
       <Toggles activeToggles={active} autoDetected={new Set()} onChange={onChange} lang="en" />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /A03 Injection/i }));
+    fireEvent.click(screen.getByRole("button", { name: /A03 Supply Chain/i }));
     expect(onChange).toHaveBeenCalledWith("A03", false);
   });
 
@@ -63,7 +63,7 @@ describe("Toggles", () => {
       <Toggles activeToggles={new Set()} autoDetected={new Set()} onChange={noop} lang="en" />
     );
 
-    const btn = screen.getByRole("button", { name: /A02 Crypto/i });
+    const btn = screen.getByRole("button", { name: /A02 Misconfiguration/i });
     expect(btn).toHaveAttribute("data-state", "inactive");
     expect(btn).toHaveAttribute("aria-pressed", "false");
   });
@@ -75,7 +75,7 @@ describe("Toggles", () => {
       <Toggles activeToggles={new Set()} autoDetected={autoDetected} onChange={onChange} lang="en" />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /A04 Insecure Design/i }));
+    fireEvent.click(screen.getByRole("button", { name: /A04 Crypto Failures/i }));
     expect(onChange).not.toHaveBeenCalled();
   });
 
@@ -89,7 +89,7 @@ describe("Toggles", () => {
     const a01 = screen.getByRole("button", { name: /A01 Access Control/i });
     expect(a01).toHaveAttribute("data-state", "auto");
 
-    const a02 = screen.getByRole("button", { name: /A02 Crypto/i });
+    const a02 = screen.getByRole("button", { name: /A02 Misconfiguration/i });
     expect(a02).toHaveAttribute("data-state", "manual");
   });
 

@@ -9,6 +9,7 @@ import { buildPrompt } from "@/core/prompt-builder";
 import { OutputPanel } from "./OutputPanel";
 import { Toggles } from "./Toggles";
 import { ThemeToggle } from "./ThemeToggle";
+import Link from "next/link";
 
 // ---------------------------------------------------------------------------
 // UI Labels
@@ -285,6 +286,12 @@ export function PromptWorkspace() {
     <main className="min-h-screen flex flex-col items-center px-4 py-12">
       {/* Fixed top-right controls */}
       <div className="fixed top-4 right-4 flex items-center gap-2">
+        <Link
+          href="/"
+          className="text-xs font-mono text-muted hover:text-accent transition-colors"
+        >
+          ← Analyzer
+        </Link>
         <button
           role="switch"
           aria-checked={state.lang === "en"}

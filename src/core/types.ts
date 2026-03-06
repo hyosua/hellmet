@@ -29,6 +29,7 @@ export interface OWASPRule {
   severity: Severity;
 }
 
+
 export interface Detection {
   language: string | null;
   domains: DomainKey[];
@@ -43,4 +44,20 @@ export interface AppState {
   toggles: Record<OWASPRuleId, boolean>;
   output: PromptOutput | null;
   isLoading: boolean;
+}
+
+export type AppMode = "intention" | "code";
+
+export interface VulnerabilityMatch {
+  ruleId: OWASPRuleId;
+  patternId: string;
+  line: number;
+  snippet: string;
+  explanation: string;
+  explanation_en: string;
+}
+
+export interface CodeAnalysisResult {
+  matches: VulnerabilityMatch[];
+  detectedRuleIds: OWASPRuleId[];
 }
