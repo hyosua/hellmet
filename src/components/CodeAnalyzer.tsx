@@ -162,6 +162,8 @@ const UI = {
     owaspLabel: "Règles OWASP",
     owaspDesc: "— détectées automatiquement, activables manuellement.",
     navPrompt: "→ Prompt builder",
+    disclaimer: "Analyse statique par regex — ne détecte pas les injections via appels de fonctions, variables intermédiaires ou patterns multi-fichiers.",
+    alternatives: "Alternatives pour une analyse approfondie :",
   },
   en: {
     subtitle: "Detect OWASP vulnerabilities in your code.",
@@ -174,6 +176,8 @@ const UI = {
     owaspLabel: "OWASP Rules",
     owaspDesc: "— auto-detected, can be toggled manually.",
     navPrompt: "→ Prompt builder",
+    disclaimer: "Regex-based static analysis — does not detect injections through function calls, intermediate variables, or cross-file patterns.",
+    alternatives: "Alternatives for deeper analysis:",
   },
 } as const;
 
@@ -366,7 +370,7 @@ export function CodeAnalyzer() {
         />
       </div>
 
-      <footer className="text-xs text-muted font-mono">
+      <footer className="flex flex-col gap-2 text-xs text-muted font-mono">
         <a
           href="https://owasp.org/Top10/2025"
           target="_blank"
@@ -375,6 +379,17 @@ export function CodeAnalyzer() {
         >
           OWASP Top 10 - 2025 ↗
         </a>
+        <p>{L.disclaimer}</p>
+        <p>
+          {L.alternatives}{" "}
+          <a href="https://semgrep.dev" target="_blank" rel="noopener noreferrer" className="hover:text-accent hover:underline transition-colors">Semgrep ↗</a>
+          {", "}
+          <a href="https://bandit.readthedocs.io" target="_blank" rel="noopener noreferrer" className="hover:text-accent hover:underline transition-colors">Bandit ↗</a>
+          {", "}
+          <a href="https://github.com/eslint-community/eslint-plugin-security" target="_blank" rel="noopener noreferrer" className="hover:text-accent hover:underline transition-colors">eslint-plugin-security ↗</a>
+          {", "}
+          <a href="https://www.sonarsource.com/products/sonarqube" target="_blank" rel="noopener noreferrer" className="hover:text-accent hover:underline transition-colors">SonarQube ↗</a>
+        </p>
       </footer>
     </main>
   );

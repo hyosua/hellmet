@@ -29,7 +29,7 @@ export const A05_PATTERNS: VulnerabilityPattern[] = [
   {
     id: "sql-string-concat",
     ruleId: "A05",
-    regex: /(SELECT|INSERT|UPDATE|DELETE|DROP)[^;]*[+.]\s*\$?\w+/gi,
+    regex: /(SELECT|INSERT|UPDATE|DELETE|DROP)[^;]*['"]\s*[+.]\s*\$?\w+/gi,
     targetSide: "server",
     explanation: "Concaténation de variable dans une requête SQL — risque d'injection SQL.",
     explanation_en: "Variable concatenation inside a SQL query — SQL injection risk.",
