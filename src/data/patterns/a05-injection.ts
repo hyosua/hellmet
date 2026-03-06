@@ -3,6 +3,14 @@ import type { VulnerabilityPattern } from "./types";
 export const A05_PATTERNS: VulnerabilityPattern[] = [
   // SQL Injection
   {
+    id: "sql-fstring",
+    ruleId: "A05",
+    regex: /f["'][^"']*(?:SELECT|INSERT|UPDATE|DELETE|DROP|WHERE|FROM)\b[^"']*\{/gi,
+    targetSide: "server",
+    explanation: "F-string Python avec interpolation dans une requête SQL — risque d'injection SQL.",
+    explanation_en: "Python f-string with interpolation inside a SQL query — SQL injection risk.",
+  },
+  {
     id: "sql-template-literal",
     ruleId: "A05",
     regex: /`[^`]*(?:SELECT|INSERT|UPDATE|DELETE|DROP)\b[^`]*\$\{/gi,
@@ -21,7 +29,7 @@ export const A05_PATTERNS: VulnerabilityPattern[] = [
   {
     id: "sql-string-concat",
     ruleId: "A05",
-    regex: /(?:["'][^"']*(?:SELECT|INSERT|UPDATE|DELETE|DROP|WHERE)\b[^"']*["']\s*[.+]\s*\$?\w+|\$\w+\s*[.+]\s*["'][^"']*(?:SELECT|INSERT|UPDATE|DELETE|DROP|WHERE)\b)/gi,
+    regex: /(SELECT|INSERT|UPDATE|DELETE|DROP)[^;]*\+\s*\$?\w+/gi,
     targetSide: "server",
     explanation: "Concaténation de variable dans une requête SQL — risque d'injection SQL.",
     explanation_en: "Variable concatenation inside a SQL query — SQL injection risk.",
