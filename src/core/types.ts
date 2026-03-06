@@ -76,11 +76,13 @@ export interface ScaFinding {
   cveId?: string;
   explanation: string;
   explanation_en: string;
+  source?: "osv" | "static";
 }
 
 export interface ScaResult {
   findings: ScaFinding[];
   checkedCount: number;
+  partial?: boolean;
 }
 
 export interface VulnerabilityMatch {

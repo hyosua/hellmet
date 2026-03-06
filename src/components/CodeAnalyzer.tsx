@@ -6,6 +6,7 @@ import type { Lang } from "@/core/prompt-builder";
 import { analyzeCode } from "@/core/code-analyzer";
 import { detectFramework } from "@/core/framework-detector";
 import { parseDependencies, analyzeScaDependencies } from "@/core/sca-analyzer";
+import { analyzeScaDependenciesRemote } from "@/core/osv-client";
 import { getRulesByIds } from "@/core/constraints";
 import { buildFixPrompt } from "@/core/prompt-builder";
 import { ContextPanel } from "./ContextPanel";
@@ -35,6 +36,8 @@ type State = {
   lang: Lang;
   context: AnalysisContext;
   scaResult: ScaResult | null;
+  scaLoading: boolean;
+  scaError: "offline" | null;
   analysis: CodeAnalysisResult | null;
   toggles: Record<OWASPRuleId, boolean>;
   autoRuleIds: OWASPRuleId[];
@@ -47,6 +50,8 @@ const initialState: State = {
   lang: "fr",
   context: INITIAL_CONTEXT,
   scaResult: null,
+  scaLoading: false,
+  scaError: null,
   analysis: null,
   toggles: INITIAL_TOGGLES,
   autoRuleIds: [],
@@ -58,7 +63,10 @@ type Action =
   | { type: "SET_CODE"; payload: string }
   | { type: "SET_LANG"; lang: Lang }
   | { type: "SET_FRAMEWORK"; framework: Framework | null }
+  | { type: "SCA_LOADING" }
   | { type: "SET_SCA"; scaResult: ScaResult; deps: ParsedDependency[] }
+  | { type: "SCA_ERROR"; errorKind: "offline" }
+  | { type: "CLEAR_SCA" }
   | { type: "SET_ANALYSIS"; analysis: CodeAnalysisResult; context: AnalysisContext }
   | { type: "TOGGLE_RULE"; id: OWASPRuleId; active: boolean }
   | { type: "GENERATE_FIX"; output: PromptOutput }
@@ -80,11 +88,24 @@ function reducer(state: State, action: Action): State {
           frameworkSource: "manual",
         },
       };
+    case "SCA_LOADING":
+      return { ...state, scaLoading: true, scaError: null };
     case "SET_SCA":
       return {
         ...state,
+        scaLoading: false,
         scaResult: action.scaResult,
         context: { ...state.context, scaDependencies: action.deps },
+      };
+    case "SCA_ERROR":
+      return { ...state, scaLoading: false, scaError: action.errorKind };
+    case "CLEAR_SCA":
+      return {
+        ...state,
+        scaResult: null,
+        scaLoading: false,
+        scaError: null,
+        context: { ...state.context, scaDependencies: null },
       };
     case "SET_ANALYSIS":
       return {
@@ -185,10 +206,21 @@ export function CodeAnalyzer() {
     dispatch({ type: "SET_FRAMEWORK", framework });
   }, []);
 
-  const handleDependenciesDrop = useCallback((packageJsonStr: string) => {
+  const handleClearDependencies = useCallback(() => {
+    dispatch({ type: "CLEAR_SCA" });
+  }, []);
+
+  const handleDependenciesDrop = useCallback(async (packageJsonStr: string) => {
     const deps = parseDependencies(packageJsonStr);
-    const scaResult = analyzeScaDependencies(deps);
-    dispatch({ type: "SET_SCA", scaResult, deps });
+    dispatch({ type: "SCA_LOADING" });
+    try {
+      const scaResult = await analyzeScaDependenciesRemote(deps);
+      dispatch({ type: "SET_SCA", scaResult, deps });
+    } catch {
+      const scaResult = analyzeScaDependencies(deps);
+      dispatch({ type: "SET_SCA", scaResult, deps });
+      dispatch({ type: "SCA_ERROR", errorKind: "offline" });
+    }
   }, []);
 
   const autoDetected = new Set(state.autoRuleIds);
@@ -249,7 +281,10 @@ export function CodeAnalyzer() {
         context={state.context}
         onFrameworkChange={handleFrameworkChange}
         onDependenciesDrop={handleDependenciesDrop}
+        onClearDependencies={handleClearDependencies}
         scaResult={state.scaResult}
+        scaLoading={state.scaLoading}
+        scaError={state.scaError}
         lang={state.lang}
       />
 
@@ -293,6 +328,7 @@ export function CodeAnalyzer() {
             scaResult={state.scaResult}
             fixPromptOutput={state.fixPromptOutput}
             onGenerateFixPrompt={handleGenerateFixPrompt}
+            onClearDependencies={handleClearDependencies}
             lang={state.lang}
           />
         </div>

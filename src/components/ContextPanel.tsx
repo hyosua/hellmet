@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import type { AnalysisContext, Framework, ScaResult } from "@/core/types";
 import type { Lang } from "@/core/prompt-builder";
 import { FRAMEWORK_LABELS } from "@/core/framework-detector";
@@ -8,7 +9,10 @@ interface ContextPanelProps {
   readonly context: AnalysisContext;
   readonly onFrameworkChange: (f: Framework | null) => void;
   readonly onDependenciesDrop: (packageJsonStr: string) => void;
+  readonly onClearDependencies: () => void;
   readonly scaResult: ScaResult | null;
+  readonly scaLoading: boolean;
+  readonly scaError: "offline" | null;
   readonly lang: Lang;
 }
 
@@ -35,6 +39,10 @@ const UI = {
     loaded: (n: number) => `${n} paquet${n > 1 ? "s" : ""} chargé${n > 1 ? "s" : ""}`,
     findings: (n: number) => `${n} finding${n > 1 ? "s" : ""} SCA`,
     detected: "détecté",
+    checking: "Analyse en cours…",
+    checkingOsv: "Interrogation de la base OSV…",
+    offline: "mode hors ligne",
+    partial: "résultats partiels",
   },
   en: {
     framework: "Framework",
@@ -44,6 +52,10 @@ const UI = {
     loaded: (n: number) => `${n} package${n > 1 ? "s" : ""} loaded`,
     findings: (n: number) => `${n} SCA finding${n > 1 ? "s" : ""}`,
     detected: "detected",
+    checking: "Checking…",
+    checkingOsv: "Querying OSV database…",
+    offline: "offline mode",
+    partial: "partial results",
   },
 } as const;
 
@@ -51,10 +63,23 @@ export function ContextPanel({
   context,
   onFrameworkChange,
   onDependenciesDrop,
+  onClearDependencies,
   scaResult,
+  scaLoading,
+  scaError,
   lang,
 }: ContextPanelProps) {
   const L = UI[lang];
+  const [showOsvHint, setShowOsvHint] = useState(false);
+
+  useEffect(() => {
+    if (!scaLoading) {
+      setShowOsvHint(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowOsvHint(true), 3000);
+    return () => clearTimeout(timer);
+  }, [scaLoading]);
 
   function handleFrameworkChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const val = e.target.value;
@@ -129,18 +154,46 @@ export function ContextPanel({
           accept=".json,application/json"
           className="sr-only"
           onChange={handleFileInput}
+          disabled={scaLoading}
         />
         <span className={`px-2.5 py-1 rounded border font-mono text-xs transition-colors ${
-          scaResult !== null
-            ? "border-accent/60 bg-accent/10 text-accent"
-            : "border-dashed border-muted text-muted hover:border-text hover:text-text"
+          scaLoading
+            ? "border-muted/40 bg-surface text-muted animate-pulse"
+            : scaResult !== null
+              ? "border-accent/60 bg-accent/10 text-accent"
+              : "border-dashed border-muted text-muted hover:border-text hover:text-text"
         }`}>
-          {scaResult !== null
-            ? `${L.loaded(scaResult.checkedCount)}${scaResult.findings.length > 0 ? ` · ${L.findings(scaResult.findings.length)}` : ""}`
-            : `+ ${L.dropzone}`}
+          {scaLoading
+            ? L.checking
+            : scaResult !== null
+              ? `${L.loaded(scaResult.checkedCount)}${scaResult.findings.length > 0 ? ` · ${L.findings(scaResult.findings.length)}` : ""}`
+              : `+ ${L.dropzone}`}
         </span>
-        {scaResult === null && (
+        {scaLoading && showOsvHint && (
+          <span className="text-[10px] text-muted font-mono hidden sm:inline">{L.checkingOsv}</span>
+        )}
+        {!scaLoading && scaResult === null && (
           <span className="text-[10px] text-muted font-mono hidden sm:inline">{L.dropzoneHint}</span>
+        )}
+        {!scaLoading && scaError === "offline" && (
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-yellow-500/40 bg-yellow-500/10 text-yellow-400">
+            {L.offline}
+          </span>
+        )}
+        {!scaLoading && scaError === null && scaResult?.partial && (
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-yellow-500/40 bg-yellow-500/10 text-yellow-400">
+            {L.partial}
+          </span>
+        )}
+        {!scaLoading && scaResult !== null && (
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); onClearDependencies(); }}
+            className="px-2 py-0.5 rounded border border-muted text-muted font-mono text-xs hover:border-red-400 hover:text-red-400 transition-colors"
+            aria-label="Clear dependencies"
+          >
+            ✕
+          </button>
         )}
       </label>
     </div>
