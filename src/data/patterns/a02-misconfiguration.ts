@@ -1,0 +1,70 @@
+import type { VulnerabilityPattern } from "./types";
+
+export const A02_PATTERNS: VulnerabilityPattern[] = [
+  {
+    id: "cors-wildcard",
+    ruleId: "A02",
+    regex: /origin\s*:\s*['\"`]\*/g,
+    targetSide: "server",
+    explanation: "CORS configuré avec wildcard (*) — autorise toutes les origines, préférer une liste blanche explicite.",
+    explanation_en: "CORS configured with wildcard (*) — allows all origins, prefer an explicit allowlist.",
+  },
+  {
+    id: "debug-true",
+    ruleId: "A02",
+    regex: /debug\s*[:=]\s*true/gi,
+    targetSide: "both",
+    explanation: "Mode debug activé — peut exposer des informations sensibles en production.",
+    explanation_en: "Debug mode enabled — may expose sensitive information in production.",
+  },
+  {
+    id: "httponly-false",
+    ruleId: "A02",
+    regex: /httpOnly\s*:\s*false/g,
+    targetSide: "server",
+    explanation: "httpOnly: false sur un cookie — le cookie est accessible via JavaScript, risque de vol de session XSS.",
+    explanation_en: "httpOnly: false on a cookie — the cookie is accessible via JavaScript, risk of XSS session theft.",
+  },
+  {
+    id: "secure-false-cookie",
+    ruleId: "A02",
+    regex: /secure\s*:\s*false/g,
+    explanation: "secure: false sur un cookie — peut être transmis sur HTTP non chiffré.",
+    explanation_en: "secure: false on a cookie — may be transmitted over unencrypted HTTP.",
+  },
+  {
+    id: "samesite-none",
+    ruleId: "A02",
+    regex: /sameSite\s*:\s*['"]none['"]/gi,
+    explanation: "sameSite: none — exposé aux attaques CSRF cross-origin si Secure n'est pas aussi activé.",
+    explanation_en: "sameSite: none — exposed to cross-origin CSRF if Secure is not also set.",
+  },
+  {
+    id: "ssl-verify-disabled",
+    ruleId: "A02",
+    regex: /rejectUnauthorized\s*:\s*false/g,
+    explanation: "Vérification du certificat SSL désactivée — ouvre la voie aux attaques man-in-the-middle.",
+    explanation_en: "SSL certificate verification disabled — allows man-in-the-middle attacks.",
+  },
+  {
+    id: "error-stack-exposed",
+    ruleId: "A02",
+    regex: /res\.(?:send|json)\s*\([^)]*err\.stack/g,
+    explanation: "Stack trace renvoyée au client — expose l'architecture interne de l'application.",
+    explanation_en: "Stack trace sent to client — exposes internal application architecture.",
+  },
+  {
+    id: "x-powered-by-exposed",
+    ruleId: "A02",
+    regex: /app\.set\s*\(\s*['"]x-powered-by['"]\s*,\s*true\s*\)/g,
+    explanation: "Header X-Powered-By activé — révèle le framework, facilite le fingerprinting.",
+    explanation_en: "X-Powered-By header enabled — reveals the framework, facilitates fingerprinting.",
+  },
+  {
+    id: "permissive-file-permissions",
+    ruleId: "A02",
+    regex: /chmod\s+(?:777|0777|a\+rwx)/g,
+    explanation: "Permissions fichier 777 — tous les utilisateurs ont accès en lecture/écriture/exécution.",
+    explanation_en: "File permissions 777 — all users have read/write/execute access.",
+  },
+];
