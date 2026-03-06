@@ -24,41 +24,33 @@ const LANGUAGE_KEYWORDS: Record<string, string[]> = {
 
 const DOMAIN_KEYWORDS: Record<DomainKey, string[]> = {
   api: [
-    "route", "endpoint", "rest", "api", "controller", "handler",
-    "request", "response", "middleware", "http", "get /", "post /",
-    "put /", "delete /", "patch /", "graphql", "resolver", "gql","openapi", "swagger",
-    "fetch(", "axios", "httpclient", "restify", "fastify", "hapi", "express", "spring", "django rest", "flask rest", "webapi",
-    
+    "endpoint", "rest", "api", "middleware", "get /", "post /",
+    "put /", "delete /", "patch /", "graphql", "resolver", "openapi", "swagger",
+    "axios", "fetch(", "restify", "fastify", "hapi", "express", "django rest", "flask rest",
   ],
   auth: [
     "login", "logout", "authentification", "authentication", "auth",
     "jwt", "session", "token", "password", "oauth", "signup",
-    "register", "credential", "mot de passe", "hash", "bcrypt", "scrypt", "argon2",
-    "passport", "devise", "warden", "identity", "claims", "refresh token",
-    "authorization",
+    "register", "credential", "mot de passe", "bcrypt", "scrypt", "argon2",
+    "passport", "refresh token", "authorization",
   ],
   upload: [
-    "upload", "fichier", "file", "image", "multipart", "form-data",
-    "storage", "s3", "bucket", "télécharger", "téléchargement",
+    "upload", "multipart", "form-data", "storage", "s3", "bucket",
+    "télécharger", "téléchargement", "fichier uploadé", "file upload",
   ],
   database: [
-    "sql", "database", "db", "query", "select", "insert", "update",
-    "delete", "orm", "prisma", "sequelize", "mongoose", "mongodb",
-    "postgres", "mysql", "sqlite", "migration", "schema", "table", "bdd", "base de données",
-    
+    "sql", "database", "db", "query", "orm", "prisma", "sequelize", "mongoose", "mongodb",
+    "postgres", "mysql", "sqlite", "migration", "bdd", "base de données",
   ],
   frontend: [
-    "composant", "component", "form", "input", "ui", "render",
-    "react", "vue", "angular", "html", "css", "dom", "button",
-    "formulaire", "interface","vuejs", "svelte", "tailwind", "bootstrap", "material-ui",
-    "frontend", "client-side", "navigateur", "browser", "css", "html", "jsx", "tsx",
+    "xss", "innerhtml", "dangerouslysetinnerhtml", "v-html",
+    "react", "vue", "angular", "vuejs", "svelte",
+    "frontend", "client-side",
   ],
   crypto: [
-    "chiffr", "hash", "encrypt", "decrypt", "bcrypt", "aes",
-    "rsa", "sha", "hmac", "signature", "clé", "key", "secret",
-    "cryptograph", "cryptographie", "crypto", "openssl", "libsodium", "sodium", "crypto-js",
-    "argon2", "scrypt", "pbkdf2", "hkdf", "key derivation","key exchange", "diffie-hellman",
-    
+    "chiffr", "encrypt", "decrypt", "bcrypt", "aes",
+    "rsa", "sha", "hmac", "cryptograph", "cryptographie",
+    "openssl", "argon2", "scrypt", "pbkdf2", "key derivation", "diffie-hellman",
   ],
 };
 
@@ -130,7 +122,7 @@ function detectDomains(lower: string, matched: string[]): DomainKey[] {
         if (!matched.includes(kw)) matched.push(kw);
       }
     }
-    if (score >= 1) {
+    if (score >= 2) {
       matchedDomains.push(domain);
     }
   }
