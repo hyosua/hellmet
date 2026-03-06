@@ -1,11 +1,40 @@
 import { VULNERABILITY_PATTERNS } from "../data/vulnerability-patterns";
-import type { CodeAnalysisResult, VulnerabilityMatch } from "./types";
+import type { AnalysisContext, CodeAnalysisResult, VulnerabilityMatch } from "./types";
 
-export function analyzeCode(code: string): CodeAnalysisResult {
+const DEFAULT_CONTEXT: AnalysisContext = {
+  framework: null,
+  frameworkSource: null,
+  targetSide: "both",
+  scaDependencies: null,
+};
+
+function patternMatchesContext(
+  pattern: (typeof VULNERABILITY_PATTERNS)[number],
+  context: AnalysisContext
+): boolean {
+  // Filter by target side
+  if (context.targetSide !== "both" && pattern.targetSide && pattern.targetSide !== "both") {
+    if (pattern.targetSide !== context.targetSide) return false;
+  }
+
+  // Filter by framework: if the pattern is framework-specific, only apply when framework matches
+  if (pattern.frameworks && pattern.frameworks.length > 0 && context.framework) {
+    if (!pattern.frameworks.includes(context.framework)) return false;
+  }
+
+  return true;
+}
+
+export function analyzeCode(
+  code: string,
+  context: AnalysisContext = DEFAULT_CONTEXT
+): CodeAnalysisResult {
   const matches: VulnerabilityMatch[] = [];
   const lines = code.split("\n");
 
   for (const pattern of VULNERABILITY_PATTERNS) {
+    if (!patternMatchesContext(pattern, context)) continue;
+
     const regex = new RegExp(pattern.regex.source, pattern.regex.flags);
     let match: RegExpExecArray | null;
 

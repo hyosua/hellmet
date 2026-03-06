@@ -48,6 +48,41 @@ export interface AppState {
 
 export type AppMode = "intention" | "code";
 
+export type Framework =
+  | "react" | "nextjs" | "vue" | "angular" | "svelte"
+  | "express" | "nestjs" | "django" | "flask" | "laravel"
+  | "generic";
+
+export type TargetSide = "client" | "server" | "both";
+
+export interface AnalysisContext {
+  framework: Framework | null;
+  frameworkSource: "auto" | "manual" | null;
+  targetSide: TargetSide;
+  scaDependencies: ParsedDependency[] | null;
+}
+
+export interface ParsedDependency {
+  name: string;
+  version: string;
+}
+
+export interface ScaFinding {
+  packageName: string;
+  installedVersion: string;
+  issue: "vulnerable" | "deprecated";
+  affectedRange: string;
+  title: string;
+  cveId?: string;
+  explanation: string;
+  explanation_en: string;
+}
+
+export interface ScaResult {
+  findings: ScaFinding[];
+  checkedCount: number;
+}
+
 export interface VulnerabilityMatch {
   ruleId: OWASPRuleId;
   patternId: string;

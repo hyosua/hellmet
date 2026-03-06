@@ -1,4 +1,5 @@
-import type { OWASPRule, PromptOutput, Severity } from "./types";
+import type { AnalysisContext, Framework, OWASPRule, PromptOutput, Severity, TargetSide } from "./types";
+import { FRAMEWORK_LABELS } from "./framework-detector";
 
 export type Lang = "fr" | "en";
 
@@ -68,13 +69,33 @@ const FIX_LABELS: Record<Lang, { task: string; instructions: string }> = {
   },
 };
 
+function buildContextBlock(context: AnalysisContext, lang: Lang): string | null {
+  const parts: string[] = [];
+  if (context.framework) {
+    const label = FRAMEWORK_LABELS[context.framework] ?? context.framework;
+    parts.push(lang === "fr" ? `Framework : ${label}` : `Framework: ${label}`);
+  }
+  if (context.targetSide !== "both") {
+    const sideLabel: Record<Exclude<TargetSide, "both">, Record<Lang, string>> = {
+      client: { fr: "Client-side", en: "Client-side" },
+      server: { fr: "Côté serveur", en: "Server-side" },
+    };
+    parts.push(lang === "fr"
+      ? `Cible : ${sideLabel[context.targetSide as Exclude<TargetSide, "both">].fr}`
+      : `Target: ${sideLabel[context.targetSide as Exclude<TargetSide, "both">].en}`
+    );
+  }
+  return parts.length > 0 ? parts.join(" — ") : null;
+}
+
 /**
  * Builds a fix prompt for code vulnerability correction in XML format.
  */
 export function buildFixPrompt(
   code: string,
   rules: OWASPRule[],
-  lang: Lang = "fr"
+  lang: Lang = "fr",
+  context?: AnalysisContext
 ): PromptOutput {
   const L = FIX_LABELS[lang];
   const sorted = sortBySeverity(rules);
@@ -85,10 +106,15 @@ export function buildFixPrompt(
         ? "Aucune contrainte de sécurité spécifique détectée."
         : "No specific security constraints detected.";
 
+  const contextLine = context ? buildContextBlock(context, lang) : null;
+  const contextBlock = contextLine
+    ? `\n<context>\n${contextLine}\n</context>\n`
+    : "";
+
   return `<task>
 ${L.task}
 </task>
-
+${contextBlock}
 <code>
 ${code}
 </code>

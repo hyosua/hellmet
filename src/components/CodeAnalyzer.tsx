@@ -1,11 +1,15 @@
 "use client";
 
 import { useReducer, useCallback } from "react";
-import type { CodeAnalysisResult, OWASPRuleId, PromptOutput } from "@/core/types";
+import type { AnalysisContext, CodeAnalysisResult, OWASPRuleId, ParsedDependency, PromptOutput, ScaResult } from "@/core/types";
+import type { Framework, TargetSide } from "@/core/types";
 import type { Lang } from "@/core/prompt-builder";
 import { analyzeCode } from "@/core/code-analyzer";
+import { detectFramework } from "@/core/framework-detector";
+import { parseDependencies, analyzeScaDependencies } from "@/core/sca-analyzer";
 import { getRulesByIds } from "@/core/constraints";
 import { buildFixPrompt } from "@/core/prompt-builder";
+import { ContextPanel } from "./ContextPanel";
 import { VulnerabilityReport } from "./VulnerabilityReport";
 import { Toggles } from "./Toggles";
 import { ThemeToggle } from "./ThemeToggle";
@@ -20,9 +24,18 @@ const INITIAL_TOGGLES: Record<OWASPRuleId, boolean> = {
   A06: false, A07: false, A08: false, A09: false, A10: false,
 };
 
+const INITIAL_CONTEXT: AnalysisContext = {
+  framework: null,
+  frameworkSource: null,
+  targetSide: "both",
+  scaDependencies: null,
+};
+
 type State = {
   codeInput: string;
   lang: Lang;
+  context: AnalysisContext;
+  scaResult: ScaResult | null;
   analysis: CodeAnalysisResult | null;
   toggles: Record<OWASPRuleId, boolean>;
   autoRuleIds: OWASPRuleId[];
@@ -33,6 +46,8 @@ type State = {
 const initialState: State = {
   codeInput: "",
   lang: "fr",
+  context: INITIAL_CONTEXT,
+  scaResult: null,
   analysis: null,
   toggles: INITIAL_TOGGLES,
   autoRuleIds: [],
@@ -43,7 +58,10 @@ const initialState: State = {
 type Action =
   | { type: "SET_CODE"; payload: string }
   | { type: "SET_LANG"; lang: Lang }
-  | { type: "SET_ANALYSIS"; analysis: CodeAnalysisResult }
+  | { type: "SET_FRAMEWORK"; framework: Framework | null }
+  | { type: "SET_TARGET_SIDE"; targetSide: TargetSide }
+  | { type: "SET_SCA"; scaResult: ScaResult; deps: ParsedDependency[] }
+  | { type: "SET_ANALYSIS"; analysis: CodeAnalysisResult; context: AnalysisContext }
   | { type: "TOGGLE_RULE"; id: OWASPRuleId; active: boolean }
   | { type: "GENERATE_FIX"; output: PromptOutput }
   | { type: "SET_ERROR"; message: string }
@@ -55,10 +73,28 @@ function reducer(state: State, action: Action): State {
       return { ...state, codeInput: action.payload, error: null };
     case "SET_LANG":
       return { ...state, lang: action.lang };
+    case "SET_FRAMEWORK":
+      return {
+        ...state,
+        context: {
+          ...state.context,
+          framework: action.framework,
+          frameworkSource: "manual",
+        },
+      };
+    case "SET_TARGET_SIDE":
+      return { ...state, context: { ...state.context, targetSide: action.targetSide } };
+    case "SET_SCA":
+      return {
+        ...state,
+        scaResult: action.scaResult,
+        context: { ...state.context, scaDependencies: action.deps },
+      };
     case "SET_ANALYSIS":
       return {
         ...state,
         analysis: action.analysis,
+        context: action.context,
         autoRuleIds: action.analysis.detectedRuleIds,
         fixPromptOutput: null,
         error: null,
@@ -130,19 +166,37 @@ export function CodeAnalyzer() {
       dispatch({ type: "SET_ERROR", message: L.errorEmpty });
       return;
     }
-    const analysis = analyzeCode(state.codeInput);
-    dispatch({ type: "SET_ANALYSIS", analysis });
-  }, [state.codeInput, L.errorEmpty]);
+    const resolvedContext: AnalysisContext =
+      state.context.frameworkSource !== "manual"
+        ? { ...state.context, framework: detectFramework(state.codeInput), frameworkSource: "auto" }
+        : state.context;
+    const analysis = analyzeCode(state.codeInput, resolvedContext);
+    dispatch({ type: "SET_ANALYSIS", analysis, context: resolvedContext });
+  }, [state.codeInput, state.context, L.errorEmpty]);
 
   const handleGenerateFixPrompt = useCallback(() => {
     const allIds = effectiveRuleIds(state.autoRuleIds, state.toggles);
     const rules = getRulesByIds(allIds);
-    const output = buildFixPrompt(state.codeInput, rules, state.lang);
+    const output = buildFixPrompt(state.codeInput, rules, state.lang, state.context);
     dispatch({ type: "GENERATE_FIX", output });
-  }, [state.codeInput, state.autoRuleIds, state.toggles, state.lang]);
+  }, [state.codeInput, state.autoRuleIds, state.toggles, state.lang, state.context]);
 
   const handleToggle = useCallback((id: OWASPRuleId, active: boolean) => {
     dispatch({ type: "TOGGLE_RULE", id, active });
+  }, []);
+
+  const handleFrameworkChange = useCallback((framework: Framework | null) => {
+    dispatch({ type: "SET_FRAMEWORK", framework });
+  }, []);
+
+  const handleTargetSideChange = useCallback((targetSide: TargetSide) => {
+    dispatch({ type: "SET_TARGET_SIDE", targetSide });
+  }, []);
+
+  const handleDependenciesDrop = useCallback((packageJsonStr: string) => {
+    const deps = parseDependencies(packageJsonStr);
+    const scaResult = analyzeScaDependencies(deps);
+    dispatch({ type: "SET_SCA", scaResult, deps });
   }, []);
 
   const autoDetected = new Set(state.autoRuleIds);
@@ -198,6 +252,16 @@ export function CodeAnalyzer() {
         </div>
       </div>
 
+      {/* Context panel */}
+      <ContextPanel
+        context={state.context}
+        onFrameworkChange={handleFrameworkChange}
+        onTargetSideChange={handleTargetSideChange}
+        onDependenciesDrop={handleDependenciesDrop}
+        scaResult={state.scaResult}
+        lang={state.lang}
+      />
+
       {/* Main 2-column layout */}
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Left column — code input */}
@@ -234,6 +298,7 @@ export function CodeAnalyzer() {
         <div className="flex-1 min-w-0 rounded-md border border-muted bg-surface p-4 overflow-y-auto">
           <VulnerabilityReport
             result={state.analysis}
+            scaResult={state.scaResult}
             fixPromptOutput={state.fixPromptOutput}
             onGenerateFixPrompt={handleGenerateFixPrompt}
             lang={state.lang}

@@ -1,4 +1,10 @@
 import { analyzeCode } from "@/core/code-analyzer";
+import type { AnalysisContext } from "@/core/types";
+
+const CTX_CLIENT: AnalysisContext = { framework: null, frameworkSource: null, targetSide: "client", scaDependencies: null };
+const CTX_SERVER: AnalysisContext = { framework: null, frameworkSource: null, targetSide: "server", scaDependencies: null };
+const CTX_REACT: AnalysisContext = { framework: "react", frameworkSource: "auto", targetSide: "client", scaDependencies: null };
+const CTX_DJANGO: AnalysisContext = { framework: "django", frameworkSource: "auto", targetSide: "server", scaDependencies: null };
 
 // ---------------------------------------------------------------------------
 // A05 — Injection
@@ -121,6 +127,66 @@ describe("analyzeCode — A10 Exceptions", () => {
     const result = analyzeCode(code);
     expect(result.matches.some((m) => m.patternId === "empty-catch")).toBe(true);
     expect(result.detectedRuleIds).toContain("A10");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Filtrage par targetSide
+// ---------------------------------------------------------------------------
+
+describe("analyzeCode — filtrage targetSide", () => {
+  it("eval-call détecté en mode client", () => {
+    const code = "eval(userInput)";
+    const result = analyzeCode(code, CTX_CLIENT);
+    expect(result.matches.some((m) => m.patternId === "eval-call")).toBe(true);
+  });
+
+  it("eval-call ignoré en mode server", () => {
+    const code = "eval(userInput)";
+    const result = analyzeCode(code, CTX_SERVER);
+    expect(result.matches.some((m) => m.patternId === "eval-call")).toBe(false);
+  });
+
+  it("sql-template-literal détecté en mode server", () => {
+    const code = "db.query(`SELECT * FROM users WHERE id = ${req.params.id}`)";
+    const result = analyzeCode(code, CTX_SERVER);
+    expect(result.matches.some((m) => m.patternId === "sql-template-literal")).toBe(true);
+  });
+
+  it("sql-template-literal ignoré en mode client", () => {
+    const code = "db.query(`SELECT * FROM users WHERE id = ${req.params.id}`)";
+    const result = analyzeCode(code, CTX_CLIENT);
+    expect(result.matches.some((m) => m.patternId === "sql-template-literal")).toBe(false);
+  });
+
+  it("hardcoded-secret détecté dans tous les modes", () => {
+    const code = 'const secret = "mysupersecretvalue";';
+    expect(analyzeCode(code, CTX_CLIENT).matches.some((m) => m.patternId === "hardcoded-secret")).toBe(true);
+    expect(analyzeCode(code, CTX_SERVER).matches.some((m) => m.patternId === "hardcoded-secret")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Filtrage par framework
+// ---------------------------------------------------------------------------
+
+describe("analyzeCode — filtrage framework", () => {
+  it("dangerously-set-html détecté pour React", () => {
+    const code = "return <div dangerouslySetInnerHTML={{ __html: content }} />;";
+    const result = analyzeCode(code, CTX_REACT);
+    expect(result.matches.some((m) => m.patternId === "dangerously-set-html")).toBe(true);
+  });
+
+  it("dangerously-set-html ignoré pour Django (framework non-React)", () => {
+    const code = "return <div dangerouslySetInnerHTML={{ __html: content }} />;";
+    const result = analyzeCode(code, CTX_DJANGO);
+    expect(result.matches.some((m) => m.patternId === "dangerously-set-html")).toBe(false);
+  });
+
+  it("patterns non framework-spécifiques détectés pour tous les frameworks", () => {
+    const code = 'const secret = "mysupersecretvalue";';
+    expect(analyzeCode(code, CTX_REACT).matches.some((m) => m.patternId === "hardcoded-secret")).toBe(true);
+    expect(analyzeCode(code, CTX_DJANGO).matches.some((m) => m.patternId === "hardcoded-secret")).toBe(true);
   });
 });
 
