@@ -50,6 +50,27 @@ export const A05_PATTERNS: VulnerabilityPattern[] = [
     explanation_en: "System command with user input — command injection (RCE).",
   },
   {
+    id: "shell-fstring",
+    ruleId: "A05",
+    regex: /(?:os\.(?:system|popen)|subprocess\.(?:call|run|Popen|check_output)|system|popen)\s*\(\s*f["'][^"']*\{/gi,
+    explanation: "F-string Python dans un appel système — injection de commande (RCE).",
+    explanation_en: "Python f-string inside a system call — command injection (RCE).",
+  },
+  {
+    id: "shell-template-literal",
+    ruleId: "A05",
+    regex: /(?:exec(?:Sync)?|spawn(?:Sync)?)\s*\(\s*`[^`]*\$\{/gi,
+    explanation: "Template literal dans un appel système — injection de commande (RCE).",
+    explanation_en: "Template literal inside a system call — command injection (RCE).",
+  },
+  {
+    id: "shell-string-concat",
+    ruleId: "A05",
+    regex: /(?:os\.(?:system|popen)|subprocess\.(?:call|run|Popen|check_output)|exec(?:Sync)?|spawn(?:Sync)?|system|popen)\s*\([^)]*["'][^"']*["']\s*\+/gi,
+    explanation: "Concaténation de chaîne dans un appel système — injection de commande (RCE).",
+    explanation_en: "String concatenation in a system call — command injection (RCE).",
+  },
+  {
     id: "new-function-eval",
     ruleId: "A05",
     regex: /new\s+Function\s*\(/g,
