@@ -25,6 +25,13 @@ export const A04_PATTERNS: VulnerabilityPattern[] = [
     explanation_en: "Weak cipher or ECB mode — use AES-256-GCM or ChaCha20-Poly1305.",
   },
   {
+    id: "python-random-insecure",
+    ruleId: "A04",
+    regex: /\brandom\.(?:random|randint|randrange|choice|choices|shuffle|sample)\s*\(/g,
+    explanation: "Module random Python non cryptographiquement sûr — utiliser le module secrets pour les tokens et secrets.",
+    explanation_en: "Python random module is not cryptographically secure — use the secrets module for tokens and secrets.",
+  },
+  {
     id: "math-random-token",
     ruleId: "A04",
     regex: /Math\.random\s*\(\)/g,

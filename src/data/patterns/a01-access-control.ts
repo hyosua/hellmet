@@ -9,6 +9,20 @@ export const A01_PATTERNS: VulnerabilityPattern[] = [
     explanation_en: "File access based on user input — path traversal risk (../../etc/passwd).",
   },
   {
+    id: "python-open-concat",
+    ruleId: "A01",
+    regex: /\bopen\s*\([^)]*["'][^"']*["']\s*\+/gi,
+    explanation: "Concaténation de chaîne dans open() — risque de path traversal (../../etc/passwd).",
+    explanation_en: "String concatenation in open() — path traversal risk (../../etc/passwd).",
+  },
+  {
+    id: "python-open-fstring",
+    ruleId: "A01",
+    regex: /\bopen\s*\(\s*f["'][^"']*\{/gi,
+    explanation: "F-string dans open() — risque de path traversal si la variable provient d'une entrée utilisateur.",
+    explanation_en: "F-string in open() — path traversal risk if the variable comes from user input.",
+  },
+  {
     id: "mass-assignment",
     ruleId: "A01",
     regex: /Object\.assign\s*\(\s*(?:user|account|profile|admin|role)\s*,\s*req\./gi,
@@ -35,6 +49,13 @@ export const A01_PATTERNS: VulnerabilityPattern[] = [
     regex: /(?:fetch|axios\.get|axios\.post|axios\.request|http\.get|https\.get|request)\s*\([^)]*(?:req\.|params\.|query\.|body\.)/gi,
     explanation: "Requête HTTP vers une URL contrôlée par l'utilisateur — risque de SSRF. Classé A01:2025 (Broken Access Control).",
     explanation_en: "HTTP request to a user-controlled URL — SSRF risk. Classified under A01:2025 (Broken Access Control).",
+  },
+  {
+    id: "ssrf-python-requests",
+    ruleId: "A01",
+    regex: /(?:requests|httpx|urllib\.request)\s*\.(?:get|post|put|delete|patch|head|request|urlopen)\s*\(\s*\w+/gi,
+    explanation: "Requête HTTP Python vers une URL potentiellement contrôlée — risque de SSRF.",
+    explanation_en: "Python HTTP request to a potentially user-controlled URL — SSRF risk.",
   },
   {
     id: "ssrf-url-redirect",

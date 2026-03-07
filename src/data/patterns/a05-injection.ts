@@ -85,7 +85,24 @@ export const A05_PATTERNS: VulnerabilityPattern[] = [
     explanation: "Appel à eval() — exécute du code arbitraire et ouvre des failles d'injection.",
     explanation_en: "Call to eval() — executes arbitrary code and opens injection vulnerabilities.",
   },
-  // XSS
+  // XSS — Reflected (server-side)
+  {
+    id: "res-send-user-input",
+    ruleId: "A05",
+    targetSide: "server",
+    regex: /res\.(?:send|write|end)\s*\([^)]*req\.(?:query|params|body|headers)/gi,
+    explanation: "Données utilisateur injectées dans res.send() sans échappement — XSS réfléchi.",
+    explanation_en: "User data injected into res.send() without escaping — reflected XSS.",
+  },
+  {
+    id: "res-send-template-literal",
+    ruleId: "A05",
+    targetSide: "server",
+    regex: /res\.(?:send|write|end)\s*\(\s*`[^`]*\$\{\s*req\./gi,
+    explanation: "Template literal avec données utilisateur dans res.send() — XSS réfléchi.",
+    explanation_en: "Template literal with user data in res.send() — reflected XSS.",
+  },
+  // XSS — Client-side (DOM)
   {
     id: "innerHTML-assign",
     ruleId: "A05",
