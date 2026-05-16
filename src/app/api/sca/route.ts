@@ -118,6 +118,38 @@ export function mergeStaticDeprecated(
   return [...osvFindings, ...extra];
 }
 
+// Fetch a single vuln's full record from OSV — the individual endpoint
+// often has summary/details even when the querybatch response doesn't.
+async function enrichVuln(id: string, signal: AbortSignal): Promise<Partial<OsvVuln>> {
+  try {
+    const res = await fetch(`https://api.osv.dev/v1/vulns/${id}`, { signal });
+    if (!res.ok) return {};
+    return (await res.json()) as OsvVuln;
+  } catch {
+    return {};
+  }
+}
+
+// For any vuln in the batch that is missing a summary, fetch its full record.
+async function enrichMissingData(vulns: OsvVuln[], signal: AbortSignal): Promise<OsvVuln[]> {
+  const needsEnrichment = vulns.filter((v) => !v.summary);
+  if (needsEnrichment.length === 0) return vulns;
+
+  const enriched = await Promise.all(
+    needsEnrichment.map((v) => enrichVuln(v.id, signal))
+  );
+
+  // Merge: only overwrite fields that were missing
+  const enrichedById = new Map(needsEnrichment.map((v, i) => [v.id, enriched[i]]));
+  return vulns.map((v) => {
+    if (!v.summary) {
+      const extra = enrichedById.get(v.id) ?? {};
+      return { ...v, ...extra };
+    }
+    return v;
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
@@ -189,8 +221,14 @@ export async function POST(req: NextRequest) {
     const timeout = setTimeout(() => controller.abort(), 8000);
     try {
       const results = await callOsv(osvQuery, controller.signal);
+      // Enrich vulns that the batch returned without summary (individual endpoint has more data)
+      const allVulns = results.flatMap((r) => r.vulns ?? []);
+      const enrichedVulns = await enrichMissingData(allVulns, controller.signal);
+      const enrichedResults: OsvResult[] = results.map((r) => ({
+        vulns: r.vulns?.map((v) => enrichedVulns.find((e) => e.id === v.id) ?? v),
+      }));
       clearTimeout(timeout);
-      const osvFindings = mapOsvResultToFindings(deps, results);
+      const osvFindings = mapOsvResultToFindings(deps, enrichedResults);
       const findings = mergeStaticDeprecated(osvFindings, deps);
       return Response.json(
         { findings, checkedCount: deps.length, partial: false },
