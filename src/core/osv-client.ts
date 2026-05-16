@@ -21,7 +21,7 @@ function hashDeps(deps: ParsedDependency[]): string {
 // Cache
 // ---------------------------------------------------------------------------
 
-const CACHE_KEY_PREFIX = "hellmet_sca_v1_";
+const CACHE_KEY_PREFIX = "hellmet_sca_v2_";
 const TTL_FULL = 30 * 24 * 60 * 60 * 1000; // 30 days
 const TTL_PARTIAL = 60 * 60 * 1000;         // 1 hour
 

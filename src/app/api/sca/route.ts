@@ -66,16 +66,19 @@ export function mapOsvResultToFindings(
     for (const vuln of result.vulns) {
       const allRanges = vuln.affected?.flatMap((a) => a.ranges ?? []) ?? [];
       const affectedRange = extractAffectedRange(allRanges);
-      const summary = vuln.summary ?? vuln.details?.split(/\.\s/)[0] ?? vuln.id;
-      const firstSentence = vuln.details?.split(/\.\s/)[0];
-      const explanation = firstSentence ? `${firstSentence}.` : summary;
+      const title = vuln.summary ?? vuln.id;
+      // Use the summary as explanation when available (it's the clearest description).
+      // If only details exist, take the first meaningful sentence (skip boilerplate < 50 chars).
+      const explanation = vuln.summary
+        ?? vuln.details?.split(/\.\s+/).find((s) => s.length >= 50)
+        ?? "";
 
       findings.push({
         packageName: dep.name,
         installedVersion: dep.version,
         issue: "vulnerable",
         affectedRange,
-        title: summary,
+        title,
         osvId: vuln.id,
         cveId: extractCveId(vuln.aliases),
         explanation,
