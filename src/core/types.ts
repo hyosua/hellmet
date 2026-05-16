@@ -73,6 +73,7 @@ export interface ScaFinding {
   issue: "vulnerable" | "deprecated";
   affectedRange: string;
   title: string;
+  osvId?: string;
   cveId?: string;
   explanation: string;
   explanation_en: string;

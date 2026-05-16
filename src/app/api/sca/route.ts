@@ -66,9 +66,9 @@ export function mapOsvResultToFindings(
     for (const vuln of result.vulns) {
       const allRanges = vuln.affected?.flatMap((a) => a.ranges ?? []) ?? [];
       const affectedRange = extractAffectedRange(allRanges);
-      const summary = vuln.summary ?? vuln.id;
+      const summary = vuln.summary ?? vuln.details?.split(/\.\s/)[0] ?? vuln.id;
       const firstSentence = vuln.details?.split(/\.\s/)[0];
-      const explanation = firstSentence ? `${summary}. ${firstSentence}.` : summary;
+      const explanation = firstSentence ? `${firstSentence}.` : summary;
 
       findings.push({
         packageName: dep.name,
@@ -76,6 +76,7 @@ export function mapOsvResultToFindings(
         issue: "vulnerable",
         affectedRange,
         title: summary,
+        osvId: vuln.id,
         cveId: extractCveId(vuln.aliases),
         explanation,
         explanation_en: explanation,
